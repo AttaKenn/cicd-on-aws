@@ -93,3 +93,13 @@ Resources:
           Bucket: !Sub ${codeBucket}
           Key: calculator.zip
 
+  # Shared Network Resources for the application environments
+  VPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+      - Key: Name
+        Value: !Sub "${EnvironmentName} VPC"
