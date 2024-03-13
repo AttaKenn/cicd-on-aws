@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "CI/CD infrastructure for a simple calculator application"
+Parameters:
+  codeBucket:
+    Description: S3 Bucket where functions.zip and calculator.zip are stored.
+    Type: String
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
+    Default: "CI-CD"
+  VpcCIDR:
+    Description: IP range (CIDR notation) for the VPC
+    Type: String
+    Default: "192.168.0.0/16"
+    AllowedPattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([1][6-9]|[2][0-8]))$
+  PublicSubnet1CIDR:
+    Description: IP range (CIDR notation) for the PUBLIC subnet in the FIRST Availability Zone
+    Type: String
+    Default: "192.168.0.0/20"
+    AllowedPattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([1][6-9]|[2][0-8]))$
+  PrivateSubnet1CIDR:
+    Description: IP range (CIDR notation) for the PRIVATE subnet in the SECOND Availability Zone
+    Type: String
+    Default: "192.168.64.0/20"
+    AllowedPattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([1][6-9]|[2][0-8]))$
+  PublicSubnet2CIDR:
+    Description: IP range (CIDR notation) for the PUBLIC subnet in the SECOND Availability Zone
+    Type: String
+    Default: "192.168.16.0/20"
+    AllowedPattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([1][6-9]|[2][0-8]))$
+  ApplicationName:
+    Description: An application name that will be prefixed to resource names
+    Type: String
+    Default: simple-calculator
+  LatestAmiId:
+    Description: The AWS::EC2::Image::Id that will be pulled from parameter store to be used for application instances
+    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
+    Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+  OutputsPrefix:
+    Description: The prefix for stack outputs that will be used for your pipeline resources
+    Type: String
+    Default: shared-resources
