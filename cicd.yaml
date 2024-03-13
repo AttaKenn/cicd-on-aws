@@ -109,3 +109,8 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub "${EnvironmentName} IG"
+  InternetGatewayAttachment:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
