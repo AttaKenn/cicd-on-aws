@@ -81,3 +81,15 @@ Metadata:
         default: The AWS::EC2::Image::Id that will be pulled from parameter store to be used for application instances
       OutputsPrefix:
         default: The prefix for stack outputs that will be used for your pipeline resources
+Resources:
+  #Code Repository for the simple Calculator application (CodeCommit Repo)
+  CodeCommitRepo:
+    Type: "AWS::CodeCommit::Repository"
+    Properties:
+      RepositoryName: !Ref EnvironmentName
+      RepositoryDescription: "Calculator application repository"
+      Code:
+        S3:
+          Bucket: !Sub ${codeBucket}
+          Key: calculator.zip
+
