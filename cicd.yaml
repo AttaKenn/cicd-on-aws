@@ -40,3 +40,44 @@ Parameters:
     Description: The prefix for stack outputs that will be used for your pipeline resources
     Type: String
     Default: shared-resources
+Metadata:
+  # Parameter formatting to help explain what parameters need to be changed.
+  # codeBucket is the only parameter not having a default value because in this project I
+  # create the S3 bucket and upload the files (functions.zip and calculator.zip) using the
+  # AWS CLI from my local machine.
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Required Parameters
+      Parameters:
+      - codeBucket
+    - Label:
+        default: Other Parameters
+      Parameters:
+      - EnvironmentName
+      - VpcCIDR
+      - PublicSubnet1CIDR
+      - PublicSubnet2CIDR
+      - PrivateSubnet1CIDR
+      - ApplicationName
+      - LatestAmiId
+      - OutputsPrefix
+    ParameterLabels:
+      codeBucket:
+        default: Bucket where functions.zip and calculator.zip are stored
+      EnvironmentName:
+        default: An environment name that will be prefixed to resource names
+      VpcCIDR:
+        default: IP range (CIDR notation) for the VPC
+      PublicSubnet1CIDR:
+        default: IP range (CIDR notation) for the PUBLIC subnet in the FIRST Availability Zone
+      PublicSubnet2CIDR:
+        default: IP range (CIDR notation) for the PUBLIC subnet in the SECOND Availability Zone
+      PrivateSubnet1CIDR:
+        default: IP range (CIDR notation) for the PRIVATE subnet in the SECOND Availability Zone
+      ApplicationName:
+        default: An application name that will be prefixed to resource names
+      LatestAmiId:
+        default: The AWS::EC2::Image::Id that will be pulled from parameter store to be used for application instances
+      OutputsPrefix:
+        default: The prefix for stack outputs that will be used for your pipeline resources
