@@ -114,3 +114,16 @@ Resources:
     Properties:
       InternetGatewayId: !Ref InternetGateway
       VpcId: !Ref VPC
+  PublicSubnet1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone:
+        Fn::Select:
+        - 0
+        - Fn::GetAZs: ""
+      CidrBlock: !Ref PublicSubnet1CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: Name
+        Value: !Sub '${EnvironmentName} Public Subnet 1'
