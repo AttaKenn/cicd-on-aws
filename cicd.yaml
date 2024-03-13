@@ -140,3 +140,16 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub '${ApplicationName} Public Subnet 2'
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone:
+        Fn::Select:
+        - 0
+        - Fn::GetAZs: ""
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: !Sub '${ApplicationName} Private Subnet 1'
