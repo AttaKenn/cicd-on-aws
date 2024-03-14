@@ -311,3 +311,39 @@ Resources:
         PolicyName: !Sub '${AWS::StackName}-CloudFormationRolePolicy'
       RoleName: !Sub '${AWS::StackName}-CloudFormation'
     Type: 'AWS::IAM::Role'
+  LambdaCodePipelineExecutionPolicy:
+    DependsOn:
+    - CloudFormationTrustRole
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: LambdaRolePolicy
+      Roles:
+      - !Ref CodePipelineLambdaRole
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action:
+          - 'logs:*'
+          Resource:
+          - 'arn:aws:logs:*:*:*'
+        - Effect: Allow
+          Action:
+          - 'codepipeline:PutJobSuccessResult'
+          - 'codepipeline:PutJobFailureResult'
+          - 's3:*'
+          - 'ec2:*'
+          - 'cloudformation:*'
+          - 'xray:*'
+          Resource:
+          - '*'
+        - Effect: Allow
+          Action:
+          - 'dynamodb:*'
+          Resource:
+          - '*'
+        - Effect: Allow
+          Action:
+          - 'sns:*'
+          Resource:
+          - '*'
