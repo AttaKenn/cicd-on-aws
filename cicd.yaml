@@ -194,3 +194,9 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub ${ApplicationName} Private Routes 1
+  DefaultPrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
