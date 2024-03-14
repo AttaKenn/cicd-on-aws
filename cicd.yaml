@@ -502,3 +502,27 @@ Resources:
             - ec2:*
             - autoscaling:*
             Resource: "*"
+  InstanceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service:
+            - "ec2.amazonaws.com"
+            - "codedeploy.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+      - PolicyName: "allow-deployment-bucket"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: "Allow"
+            Action:
+            - "s3:GetObject"
+            - "s3:GetObjectVersion"
+            Resource:
+            - !Sub ${ArtifactsBucket.Arn}/*
