@@ -153,3 +153,8 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub '${ApplicationName} Private Subnet 1'
+  NatGateway1EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
