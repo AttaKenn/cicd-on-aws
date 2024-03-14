@@ -616,3 +616,20 @@ Resources:
       Runtime: python3.7
       TracingConfig:
         Mode: Active
+
+  # Service Status Lambda function for synthetic testing
+  servicestatus:
+    Type: 'AWS::Lambda::Function'
+    DependsOn:
+    - LambdaCodePipelineExecutionPolicy
+    Properties:
+      Code:
+        S3Bucket: !Ref codeBucket
+        S3Key: functions.zip
+      Role: !GetAtt CodePipelineLambdaRole.Arn
+      Description: Test to check url passed in the event for a 200 status code
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs10.x
+      TracingConfig:
+        Mode: Active
