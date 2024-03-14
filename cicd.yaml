@@ -577,3 +577,24 @@ Resources:
             - !Sub arn:aws:s3:::${ArtifactsBucket}/*
             - !Sub arn:aws:s3:::${CacheBucket}
             - !Sub arn:aws:s3:::${CacheBucket}/*
+  SourceEventRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: 'sts:AssumeRole'
+          Effect: Allow
+          Principal:
+            Service:
+            - events.amazonaws.com
+          Sid: 1
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - 'codepipeline:StartPipelineExecution'
+            Effect: Allow
+            Resource:
+            - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${EnvironmentName}
+        PolicyName: !Sub ${EnvironmentName}-CloudWatchEventPolicy
+      RoleName: !Sub ${EnvironmentName}-CloudWatchEventRule
+    Type: "AWS::IAM::Role"
