@@ -381,3 +381,14 @@ Resources:
       Roles:
       - !Ref CodeBuildRole
     Type: 'AWS::IAM::Policy'
+  CodeBuildRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: 'sts:AssumeRole'
+          Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+      Path: /
+      RoleName: !Sub '${AWS::StackName}-CodeBuild'
+    Type: 'AWS::IAM::Role'
