@@ -526,3 +526,8 @@ Resources:
             - "s3:GetObjectVersion"
             Resource:
             - !Sub ${ArtifactsBucket.Arn}/*
+  InstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Roles:
+      - Ref: InstanceRole
