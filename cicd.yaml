@@ -405,3 +405,78 @@ Resources:
           Action:
           - 'sts:AssumeRole'
       Path: /
+  CodePipelineTrustRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: "sts:AssumeRole"
+          Effect: Allow
+          Principal:
+            Service:
+            - codepipeline.amazonaws.com
+          Sid: 1
+      Path: /
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - 's3:GetObject'
+            - 's3:GetObjectVersion'
+            - 's3:GetBucketVersioning'
+            - 's3:PutObject'
+            Effect: Allow
+            Resource:
+            - !GetAtt ArtifactsBucket.Arn
+            - !Sub ${ArtifactsBucket.Arn}/*
+          - Action:
+            - 'codecommit:CancelUploadArchive'
+            - 'codecommit:GetBranch'
+            - 'codecommit:GetCommit'
+            - 'codecommit:GetUploadArchiveStatus'
+            - 'codecommit:UploadArchive'
+            Effect: Allow
+            Resource:
+            - !GetAtt CodeCommitRepo.Arn
+          - Action:
+            - 'codebuild:StartBuild'
+            - 'codebuild:BatchGetBuilds'
+            - 'codebuild:StopBuild'
+            Effect: Allow
+            Resource:
+            - !GetAtt CodeBuildProject.Arn
+          - Action:
+            - 'codedeploy:CreateDeployment'
+            - 'codedeploy:GetApplicationRevision'
+            - 'codedeploy:GetDeployment'
+            - 'codedeploy:GetDeploymentConfig'
+            - 'codedeploy:RegisterApplicationRevision'
+            Effect: Allow
+            Resource:
+            - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${AWS::StackName}*
+            - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${AWS::StackName}*
+            - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentconfig:*
+          - Action:
+            - 'cloudformation:CreateStack'
+            - 'cloudformation:DescribeStacks'
+            - 'cloudformation:DeleteStack'
+            - 'cloudformation:UpdateStack'
+            - 'cloudformation:CreateChangeSet'
+            - 'cloudformation:ExecuteChangeSet'
+            - 'cloudformation:DeleteChangeSet'
+            - 'cloudformation:DescribeChangeSet'
+            - 'cloudformation:SetStackPolicy'
+            Effect: Allow
+            Resource:
+            - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}*
+          - Action:
+            - 'iam:PassRole'
+            Effect: Allow
+            Resource:
+            - !GetAtt CloudFormationTrustRole.Arn
+          - Action:
+            - 'lambda:InvokeFunction'
+            Effect: Allow
+            Resource: '*'
+        PolicyName: !Sub ${AWS::StackName}-CodePipelineRolePolicy
+      RoleName: !Sub ${AWS::StackName}-CodePipeline
+    Type: 'AWS::IAM::Role'
