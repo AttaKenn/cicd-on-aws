@@ -598,3 +598,21 @@ Resources:
         PolicyName: !Sub ${EnvironmentName}-CloudWatchEventPolicy
       RoleName: !Sub ${EnvironmentName}-CloudWatchEventRule
     Type: "AWS::IAM::Role"
+
+  # Static Code Analysis Lambda function
+  CFNValidateLambda:
+    Type: 'AWS::Lambda::Function'
+    DependsOn:
+    - LambdaCodePipelineExecutionPolicy
+    - DBRules
+    Properties:
+      Code:
+        S3Bucket: !Ref codeBucket
+        S3Key: functions.zip
+      Role: !GetAtt CodePipelineLambdaRole.Arn
+      Description: Checks the CloudFormation template for known violations
+      Timeout: 60
+      Handler: cfn_validate_lambda.lambda_handler
+      Runtime: python3.7
+      TracingConfig:
+        Mode: Active
