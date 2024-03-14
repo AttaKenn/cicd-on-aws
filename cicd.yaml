@@ -480,3 +480,25 @@ Resources:
         PolicyName: !Sub ${AWS::StackName}-CodePipelineRolePolicy
       RoleName: !Sub ${AWS::StackName}-CodePipeline
     Type: 'AWS::IAM::Role'
+  CodeDeployRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service:
+            - "codedeploy.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+      - PolicyName: allow-autoscaling
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action:
+            - ec2:*
+            - autoscaling:*
+            Resource: "*"
