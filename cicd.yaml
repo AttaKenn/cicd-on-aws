@@ -255,3 +255,59 @@ Resources:
         Location: !GetAtt CodeCommitRepo.CloneUrlHttp
         BuildSpec: buildspecs/build-with-cache.yml
     Type: 'AWS::CodeBuild::Project'
+
+  # IAM Resources for the CI/CD pipeline
+  CloudFormationTrustRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: 'sts:AssumeRole'
+          Effect: Allow
+          Principal:
+            Service:
+            - cloudformation.amazonaws.com
+      Path: /
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - 'iam:CreateInstanceProfile'
+            - 'iam:DeleteInstanceProfile'
+            - 'iam:GetRole'
+            - 'iam:GetInstanceProfile'
+            - 'iam:RemoveRoleFromInstanceProfile'
+            - 'iam:UpdateRoleDescription'
+            - 'iam:CreateRole'
+            - 'iam:DeleteRole'
+            - 'iam:AttachRolePolicy'
+            - 'iam:PutRolePolicy'
+            - 'iam:ListInstanceProfiles'
+            - 'iam:AddRoleToInstanceProfile'
+            - 'iam:ListInstanceProfilesForRole'
+            - 'iam:PassRole'
+            - 'iam:DetachRolePolicy'
+            - 'iam:DeleteRolePolicy'
+            - 'iam:ListRolePolicies'
+            - 'iam:ListRoles'
+            - 'iam:GetRolePolicy'
+            Effect: Allow
+            Resource:
+            - !Sub 'arn:aws:iam::*:role/${AWS::StackName}*'
+            - !Sub 'arn:aws:iam::*:instance-profile/${AWS::StackName}*'
+          - Action:
+            - 'iam:CreateServiceLinkedRole'
+            Effect: Allow
+            Resource:
+            - 'arn:aws:iam::*:role/aws-service-role/*'
+          - Action:
+            - 'ssm:GetParameters'
+            - 'autoscaling:*'
+            - 'ec2:*'
+            - 'codedeploy:*'
+            - 'elasticloadbalancing:*'
+            Effect: Allow
+            Resource:
+            - '*'
+        PolicyName: !Sub '${AWS::StackName}-CloudFormationRolePolicy'
+      RoleName: !Sub '${AWS::StackName}-CloudFormation'
+    Type: 'AWS::IAM::Role'
