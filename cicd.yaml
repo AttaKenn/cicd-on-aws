@@ -347,3 +347,37 @@ Resources:
           - 'sns:*'
           Resource:
           - '*'
+  CodeBuildPolicy:
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+          - 'logs:CreateLogGroup'
+          - 'logs:CreateLogStream'
+          - 'logs:PutLogEvents'
+          Effect: Allow
+          Resource: '*'
+        - Action:
+          - 's3:PutObject'
+          - 's3:GetObject'
+          - 's3:GetObjectVersion'
+          Effect: Allow
+          Resource:
+          - !GetAtt ArtifactsBucket.Arn
+          - !Sub ${ArtifactsBucket.Arn}/*
+          - !GetAtt CacheBucket.Arn
+          - !Sub ${CacheBucket.Arn}/*
+        - Action:
+          - 'codecommit:GitPull'
+          Effect: Allow
+          Resource: !GetAtt CodeCommitRepo.Arn
+        - Action:
+          - 'kms:GenerateDataKey*'
+          - 'kms:Encrypt'
+          - 'kms:Decrypt'
+          Effect: Allow
+          Resource: !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/s3'
+      PolicyName: !Sub '${AWS::StackName}-CodeBuildPolicy'
+      Roles:
+      - !Ref CodeBuildRole
+    Type: 'AWS::IAM::Policy'
