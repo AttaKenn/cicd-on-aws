@@ -228,3 +228,30 @@ Resources:
         ToPort: 8080
         SourceSecurityGroupId:
           Ref: PublicHttpIngressSecurityGroup
+  # CodeBuild Project to build the application and run unit tests
+  CodeBuildProject:
+    DependsOn:
+    - CodeBuildPolicy
+    Properties:
+      Artifacts:
+        Location: !Ref ArtifactsBucket
+        Name: build-output.zip
+        NamespaceType: BUILD_ID
+        Packaging: ZIP
+        Path: codebuild
+        Type: S3
+      Cache:
+        Location: !Ref CacheBucket
+        Type: S3
+      Description: !Sub 'CodeBuild Project for ${AWS::StackName}'
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: 'aws/codebuild/nodejs:8.11.0'
+        Type: LINUX_CONTAINER
+      Name: !Ref 'AWS::StackName'
+      ServiceRole: !Ref CodeBuildRole
+      Source:
+        Type: CODECOMMIT
+        Location: !GetAtt CodeCommitRepo.CloneUrlHttp
+        BuildSpec: buildspecs/build-with-cache.yml
+    Type: 'AWS::CodeBuild::Project'
