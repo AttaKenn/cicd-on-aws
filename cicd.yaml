@@ -721,3 +721,9 @@ Resources:
       KeySchema:
       - AttributeName: rule
         KeyType: HASH
+
+  # CodeDeploy Application to install the application to ec2 instances
+  CodeDeployApplication:
+    Properties:
+      ApplicationName: !Ref 'AWS::StackName'
+    Type: "AWS::CodeDeploy::Application"
