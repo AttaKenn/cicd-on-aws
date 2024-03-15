@@ -748,3 +748,31 @@ Resources:
           curl -O https://aws-codedeploy-${AWS::Region}.s3.amazonaws.com/latest/install
           chmod +x ./install
           ./install auto
+
+  # CodePipeline resources & CloudWatch Events rule to kickoff the pipeline when code changes
+  SourceEvent:
+    Properties:
+      Description: >-
+        Rule for Amazon CloudWatch Events to detect changes to the source repository and trigger pipeline execution
+      EventPattern:
+        detail:
+          event:
+          - referenceCreated
+          - referenceUpdated
+          referenceName:
+          - main
+          referenceType:
+          - branch
+        detail-type:
+        - CodeCommit Repository State Change
+        resources:
+        - !GetAtt CodeCommitRepo.Arn
+        source:
+        - aws.codecommit
+      Name: !Sub ${EnvironmentName}-SourceEvent
+      State: ENABLED
+      Targets:
+      - Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${EnvironmentName}
+        Id: ProjectPipelineTarget
+        RoleArn: !GetAtt SourceEventRole.Arn
+    Type: 'AWS::Events::Rule'
