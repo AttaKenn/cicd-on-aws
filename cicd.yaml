@@ -695,3 +695,11 @@ Resources:
       Role: !GetAtt 'LambdaExecutionRole.Arn'
       Runtime: python3.7
       Timeout: 500
+
+  # Custom bucket maintenance functions.
+  artifactsBucketMaintenance:
+    Type: Custom::BucketMaintenance
+    Version: "1.0"
+    Properties:
+      ServiceToken: !GetAtt s3ObjectLambda.Arn
+      s3bucket: !Ref ArtifactsBucket
