@@ -633,3 +633,41 @@ Resources:
       Runtime: nodejs10.x
       TracingConfig:
         Mode: Active
+
+  # S3 Buckets and policy to hold build artifacts
+  ArtifactBucketPolicy:
+    Properties:
+      Bucket: !Ref ArtifactsBucket
+      PolicyDocument:
+        Id: SSEAndSSLPolicy
+        Statement:
+        - Action:
+          - 's3:GetObject'
+          - 's3:GetObjectVersion'
+          - 's3:GetBucketVersioning'
+          Condition:
+            Bool:
+              'aws:SecureTransport': false
+          Effect: Allow
+          Principal:
+            AWS:
+            - !GetAtt CodePipelineTrustRole.Arn
+            - !GetAtt CodeBuildRole.Arn
+            - !GetAtt CloudFormationTrustRole.Arn
+          Resource:
+          - !GetAtt ArtifactsBucket.Arn
+          - !Sub ${ArtifactsBucket.Arn}/*
+          Sid: WhitelistedGet
+        - Action:
+          - 's3:PutObject'
+          Effect: Allow
+          Principal:
+            AWS:
+            - !GetAtt CodePipelineTrustRole.Arn
+            - !GetAtt CodeBuildRole.Arn
+          Resource:
+          - !GetAtt ArtifactsBucket.Arn
+          - !Sub ${ArtifactsBucket.Arn}/*
+          Sid: WhitelistedPut
+        Version: 2012-10-17
+    Type: 'AWS::S3::BucketPolicy'
