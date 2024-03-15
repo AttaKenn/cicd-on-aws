@@ -727,3 +727,24 @@ Resources:
     Properties:
       ApplicationName: !Ref 'AWS::StackName'
     Type: "AWS::CodeDeploy::Application"
+
+  # Launch config for launching environment instances
+  LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      AssociatePublicIpAddress: false
+      ImageId: !Ref LatestAmiId
+      InstanceType: t2.micro
+      SecurityGroups:
+      - Ref: PrivateHttpIngressSecurityGroup
+      IamInstanceProfile:
+        Ref: InstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum -y update
+          yum install -y ruby
+          cd /home/ec2-user
+          curl -O https://aws-codedeploy-${AWS::Region}.s3.amazonaws.com/latest/install
+          chmod +x ./install
+          ./install auto
