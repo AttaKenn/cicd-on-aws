@@ -674,3 +674,11 @@ Resources:
   ArtifactsBucket:
     Type: 'AWS::S3::Bucket'
     DeletionPolicy: Delete
+  CacheBucket:
+    DeletionPolicy: Delete
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+        - ExpirationInDays: 7
+          Status: Enabled
+    Type: 'AWS::S3::Bucket'
