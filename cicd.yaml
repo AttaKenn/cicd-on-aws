@@ -671,3 +671,6 @@ Resources:
           Sid: WhitelistedPut
         Version: 2012-10-17
     Type: 'AWS::S3::BucketPolicy'
+  ArtifactsBucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Delete
