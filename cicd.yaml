@@ -968,3 +968,38 @@ Resources:
           Name: Deploy
           OutputArtifacts: []
           RunOrder: 3
+
+Outputs:
+  # Outputs that are used by the environment cloudformation template
+  vpc:
+    Value: !Ref VPC
+    Export:
+      Name: !Sub ${OutputsPrefix}:VPC
+  publicsubnets:
+    Value: !Sub ${PublicSubnet1},${PublicSubnet2}
+    Export:
+      Name: !Sub ${OutputsPrefix}:PublicSubnets
+  privatesubnets:
+    Value: !Sub ${PrivateSubnet1}
+    Export:
+      Name: !Sub ${OutputsPrefix}:PrivateSubnets
+  publichttpingresssecuritygroup:
+    Value: !Ref PublicHttpIngressSecurityGroup
+    Export:
+      Name: !Sub ${OutputsPrefix}:PublicHttpIngressSecurityGroup
+  launchconfig:
+    Value: !Ref LaunchConfig
+    Export:
+      Name: !Sub ${OutputsPrefix}:LaunchConfig
+  codedeployapplication:
+    Value: !Ref CodeDeployApplication
+    Export:
+      Name: !Sub ${OutputsPrefix}:CodeDeployApplication
+  applicationname:
+    Value: !Ref ApplicationName
+    Export:
+      Name: !Sub ${OutputsPrefix}:ApplicationName
+  codedeployrole:
+    Value: !GetAtt CodeDeployRole.Arn
+    Export:
+      Name: !Sub ${OutputsPrefix}:CodeDeployRole
