@@ -709,3 +709,15 @@ Resources:
     Properties:
       ServiceToken: !GetAtt s3ObjectLambda.Arn
       s3bucket: !Ref CacheBucket
+
+  # Dynamodb table for static code analysis rules
+  DBRules:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: rule
+        AttributeType: S
+      KeySchema:
+      - AttributeName: rule
+        KeyType: HASH
