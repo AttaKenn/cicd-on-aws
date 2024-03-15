@@ -682,3 +682,16 @@ Resources:
         - ExpirationInDays: 7
           Status: Enabled
     Type: 'AWS::S3::Bucket'
+
+  # Custom resource to load and clean the buckets
+  s3ObjectLambda:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Description: This Lambda function removes objects from an S3 bucket.
+      Code:
+        S3Bucket: !Ref codeBucket
+        S3Key: functions.zip
+      Handler: s3_object_remover.lambda_handler
+      Role: !GetAtt 'LambdaExecutionRole.Arn'
+      Runtime: python3.7
+      Timeout: 500
