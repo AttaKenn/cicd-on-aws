@@ -703,3 +703,9 @@ Resources:
     Properties:
       ServiceToken: !GetAtt s3ObjectLambda.Arn
       s3bucket: !Ref ArtifactsBucket
+  cacheBucketMaintenance:
+    Type: Custom::BucketMaintenance
+    Version: "1.0"
+    Properties:
+      ServiceToken: !GetAtt s3ObjectLambda.Arn
+      s3bucket: !Ref CacheBucket
