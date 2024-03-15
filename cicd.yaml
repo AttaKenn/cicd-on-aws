@@ -776,3 +776,195 @@ Resources:
         Id: ProjectPipelineTarget
         RoleArn: !GetAtt SourceEventRole.Arn
     Type: 'AWS::Events::Rule'
+
+  # CodePipeline pipeline ;)
+  ReleasePipeline:
+    Type: "AWS::CodePipeline::Pipeline"
+    Properties:
+      Name: "releasePipeline"
+      ArtifactStore:
+        Location: !Ref ArtifactsBucket
+        Type: S3
+      RoleArn: !GetAtt CodePipelineTrustRole.Arn
+      Stages:
+      - Name: Source
+        Actions:
+        - ActionTypeId:
+            Category: Source
+            Owner: AWS
+            Provider: CodeCommit
+            Version: '1'
+          Configuration:
+            BranchName: main
+            PollForSourceChanges: false
+            RepositoryName: !GetAtt CodeCommitRepo.Name
+          InputArtifacts: []
+          Name: ApplicationSource
+          OutputArtifacts:
+          - Name: !Sub ${AWS::StackName}-SourceArtifact
+          RunOrder: 1
+      - Name: Static_Check
+        Actions:
+        - ActionTypeId:
+            Category: Invoke
+            Owner: AWS
+            Provider: Lambda
+            Version: '1'
+          Configuration:
+            FunctionName: !Ref CFNValidateLambda
+            UserParameters: !Sub "{\"input\": \"${AWS::StackName}-SourceArtifact\", \n\"file\": \"cloudformation/application.json\",\n\"output\": \"${ArtifactsBucket}\"}\n"
+          InputArtifacts:
+          - Name: !Sub ${AWS::StackName}-SourceArtifact
+          OutputArtifacts:
+          - Name: TemplateSource2
+          Name: stack_validate
+          Region: !Ref 'AWS::Region'
+          RunOrder: 1
+      - Name: Build
+        Actions:
+        - ActionTypeId:
+            Category: Build
+            Owner: AWS
+            Provider: CodeBuild
+            Version: '1'
+          Configuration:
+            ProjectName: !Ref AWS::StackName
+          InputArtifacts:
+          - Name: !Sub ${AWS::StackName}-SourceArtifact
+          Name: Build
+          OutputArtifacts:
+          - Name: !Sub ${AWS::StackName}-BuildArtifact
+          RunOrder: 1
+      - Name: Test_Stack
+        Actions:
+        - ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Provider: CloudFormation
+            Version: '1'
+          Configuration:
+            ActionMode: CHANGE_SET_REPLACE
+            Capabilities: CAPABILITY_IAM
+            ChangeSetName: test-stack-changeset
+            ParameterOverrides: '{"Stage":"Test"}'
+            RoleArn: !GetAtt CloudFormationTrustRole.Arn
+            StackName: !Sub ${AWS::StackName}-test-stack
+            TemplatePath: !Sub '${AWS::StackName}-BuildArtifact::cloudformation/application.json'
+          InputArtifacts:
+          - Name: !Sub ${AWS::StackName}-BuildArtifact
+          Name: GenerateChangeSet
+          RunOrder: 1
+        - ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Provider: CloudFormation
+            Version: '1'
+          Configuration:
+            ActionMode: CHANGE_SET_EXECUTE
+            ChangeSetName: test-stack-changeset
+            StackName: !Sub ${AWS::StackName}-test-stack
+          InputArtifacts: []
+          Name: ExecuteChangeSet
+          Namespace: TestStackOutput
+          RunOrder: 2
+        - ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Provider: CodeDeploy
+            Version: '1'
+          Configuration:
+            ApplicationName: !Ref AWS::StackName
+            DeploymentGroupName: !Sub ${AWS::StackName}-test-stack-DeploymentGroup
+          InputArtifacts:
+          - Name: !Sub ${AWS::StackName}-BuildArtifact
+          Name: Deploy
+          OutputArtifacts: []
+          RunOrder: 3
+      - Name: Service_Status
+        Actions:
+        - ActionTypeId:
+            Category: Invoke
+            Owner: AWS
+            Provider: Lambda
+            Version: '1'
+          Configuration:
+            FunctionName: !Ref servicestatus
+            UserParameters: '#{TestStackOutput.Url}'
+          Name: Test_Status
+          Region: !Ref 'AWS::Region'
+          RunOrder: 1
+      - Name: Approval
+        Actions:
+        - ActionTypeId:
+            Category: Approval
+            Owner: AWS
+            Provider: Manual
+            Version: '1'
+          Configuration:
+            CustomData: >-
+              Do you want to purge Test region resources and initiate Production deployment ?
+          InputArtifacts: []
+          Name: Purge_Test
+          OutputArtifacts: []
+          Region: !Ref 'AWS::Region'
+          RunOrder: 1
+        - ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Provider: CloudFormation
+            Version: '1'
+          Configuration:
+            ActionMode: DELETE_ONLY
+            RoleArn: !GetAtt CloudFormationTrustRole.Arn
+            StackName: !Sub '${AWS::StackName}-test-stack'
+          InputArtifacts: []
+          Name: Delete_Test_Stack
+          OutputArtifacts: []
+          Region: !Ref 'AWS::Region'
+          RunOrder: 2
+      - Name: Prod_Stack
+        Actions:
+        - ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Provider: CloudFormation
+            Version: '1'
+          Configuration:
+            ActionMode: CHANGE_SET_REPLACE
+            Capabilities: CAPABILITY_IAM
+            ChangeSetName: prod-stack-changeset
+            ParameterOverrides: '{"Stage":"Prod"}'
+            RoleArn: !GetAtt CloudFormationTrustRole.Arn
+            StackName: !Sub ${AWS::StackName}-prod-stack
+            TemplatePath: !Sub '${AWS::StackName}-BuildArtifact::cloudformation/application.json'
+          InputArtifacts:
+          - Name: !Sub ${AWS::StackName}-BuildArtifact
+          Name: GenerateChangeSet
+          OutputArtifacts: []
+          RunOrder: 1
+        - ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Provider: CloudFormation
+            Version: '1'
+          Configuration:
+            ActionMode: CHANGE_SET_EXECUTE
+            ChangeSetName: prod-stack-changeset
+            StackName: !Sub ${AWS::StackName}-prod-stack
+          InputArtifacts: []
+          Name: ExecuteChangeSet
+          OutputArtifacts: []
+          RunOrder: 2
+        - ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Provider: CodeDeploy
+            Version: '1'
+          Configuration:
+            ApplicationName: !Ref AWS::StackName
+            DeploymentGroupName: !Sub ${AWS::StackName}-prod-stack-DeploymentGroup
+          InputArtifacts:
+          - Name: !Sub ${AWS::StackName}-BuildArtifact
+          Name: Deploy
+          OutputArtifacts: []
+          RunOrder: 3
