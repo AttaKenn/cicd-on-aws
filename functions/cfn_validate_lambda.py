@@ -32,3 +32,29 @@ def find_artifact(artifacts, name):
             return artifact
 
     raise Exception('Input artifact named "{0}" not found in event'.format(name))
+
+def get_template(s3, artifact, file_in_zip):
+    """Gets the template artifact
+
+    Downloads the artifact from the S3 artifact store to a temporary file
+    then extracts the zip and returns the file containing the CloudFormation
+    template.
+
+    Args:
+        artifact: The artifact to download
+        file_in_zip: The path to the file within the zip containing the template
+
+    Returns:
+        The CloudFormation template as a string
+
+    """
+    tmp_file = tempfile.NamedTemporaryFile()
+    bucket = artifact['location']['s3Location']['bucketName']
+    key = artifact['location']['s3Location']['objectKey']
+
+    with tempfile.NamedTemporaryFile() as tmp_file:
+        print("Retrieving s3://" + bucket + "/" + key)
+        s3.download_file(bucket, key, tmp_file.name)
+        with zipfile.ZipFile(tmp_file.name, 'r') as zip:
+            return zip.read(file_in_zip)
+
