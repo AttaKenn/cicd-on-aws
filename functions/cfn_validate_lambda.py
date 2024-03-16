@@ -58,3 +58,14 @@ def get_template(s3, artifact, file_in_zip):
         with zipfile.ZipFile(tmp_file.name, 'r') as zip:
             return zip.read(file_in_zip)
 
+def put_job_success(job, message):
+    """Notify CodePipeline of a successful job
+
+    Args:
+        job: The CodePipeline job ID
+        message: A message to be logged relating to the job status
+
+    """
+    print('Putting job success')
+    print(message)
+    code_pipeline.put_job_success_result(jobId=job)
