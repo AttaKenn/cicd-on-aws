@@ -69,3 +69,15 @@ def put_job_success(job, message):
     print('Putting job success')
     print(message)
     code_pipeline.put_job_success_result(jobId=job)
+
+def put_job_failure(job, message):
+    """Notify CodePipeline of a failed job
+
+    Args:
+        job: The CodePipeline job ID
+        message: A message to be logged relating to the job status
+
+    """
+    print('Putting job failure')
+    print(message)
+    code_pipeline.put_job_failure_result(jobId=job, failureDetails={'message': message, 'type': 'JobFailed'})
