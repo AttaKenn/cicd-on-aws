@@ -81,3 +81,24 @@ def put_job_failure(job, message):
     print('Putting job failure')
     print(message)
     code_pipeline.put_job_failure_result(jobId=job, failureDetails={'message': message, 'type': 'JobFailed'})
+
+def continue_job_later(job, message):
+    """Notify CodePipeline of a continuing job
+
+    This will cause CodePipeline to invoke the function again with the
+    supplied continuation token.
+
+    Args:
+        job: The JobID
+        message: A message to be logged relating to the job status
+        continuation_token: The continuation token
+
+    """
+
+    # The continuation token is used to keep track of any job execution state
+    # This data will be available when a new job is scheduled to continue the current execution
+    continuation_token = json.dumps({'previous_job_id': job})
+
+    print('Putting job continuation')
+    print(message)
+    code_pipeline.put_job_success_result(jobId=job, continuationToken=continuation_token)
