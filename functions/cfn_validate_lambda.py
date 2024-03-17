@@ -215,3 +215,51 @@ def get_rules():
     rules['sgRules'] = sgRules
     rules['ec2Rules'] = ec2Rules
     return rules
+
+def add_rules(logTable):
+    client = boto3.client('dynamodb')
+    client.put_item(
+        TableName=logTable,
+        Item={
+            'rule' : {'S': "IngressOpenToWorld"},
+            'category' : {'S': "SecurityGroup"},
+            'ruletype' : {'S': "regex"},
+            'ruledata' : {'S': "^.*Ingress.*((0\.){3}0\/0)"},
+            'riskvalue' : {'N': "100"},
+            'active' : {'S': "Y"}
+        }
+    )
+
+    client.put_item(
+        TableName=logTable,
+        Item={
+            'rule' : {'S': "SSHOpenToWorld"},
+            'category' : {'S': "SecurityGroup"},
+            'ruletype' : {'S': "regex"},
+            'ruledata' : {'S': "^.*Ingress.*(([fF]rom[pP]ort|[tT]o[pP]ort).\s*:\s*u?.(22).*[cC]idr[iI]p.\s*:\s*u?.((0\.){3}0\/0)|[cC]idr[iI]p.\s*:\s*u?.((0\.){3}0\/0).*([fF]rom[pP]ort|[tT]o[pP]ort).\s*:\s*u?.(22))"},
+            'riskvalue' : {'N': "100"},
+            'active' : {'S': "Y"}
+        }
+    )
+    client.put_item(
+        TableName=logTable,
+        Item={
+            'rule' : {'S': "AllowHttp"},
+            'category' : {'S': "SecurityGroup"},
+            'ruletype' : {'S': "regex"},
+            'ruledata' : {'S': "^.*Ingress.*[fF]rom[pP]ort.\s*:\s*u?.(80)"},
+            'riskvalue' : {'N': "3"},
+            'active' : {'S': "N"}
+        }
+    )
+    client.put_item(
+        TableName=logTable,
+        Item={
+            'rule' : {'S': "ForbiddenAMIs"},
+            'category' : {'S': "EC2Instance"},
+            'ruletype' : {'S': "regex"},
+            'ruledata' : {'S': "^.*ImageId.\s*:\s*u?.(ami-7a11e211|ami-08111162|ami-f6035893)"},
+            'riskvalue' : {'N': "10"},
+            'active' : {'S': "N"}
+        }
+    )
