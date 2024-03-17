@@ -338,3 +338,59 @@ def s3_next_step(s3, bucket, risk, failedRules, template, job_id):
         print("High risk file, fail pipeline")
         put_job_failure(job_id, 'Function exception: Failed filters ' + str(failedRules))
     return 0
+
+def lambda_handler(event):
+    """The Lambda function handler
+
+    Validates input CloudFormation template for security vulnerabilities. 
+    Route as appropriate based on risk assessment.
+
+    """
+    try:
+        # Print the entire event for tracking
+        print("Received event: " + json.dumps(event, indent=2))
+
+        # Extract the Job ID
+        job_id = event['CodePipeline.job']['id']
+
+        # Extract the Job Data
+        job_data = event['CodePipeline.job']['data']
+
+        # Extract the params
+        params = get_user_params(job_data)
+
+        # Get the list of artifacts passed to the function
+        input_artifacts = job_data['inputArtifacts']
+
+        input_artifact = params['input']
+        template_file = params['file']
+        output_bucket = params['output']
+
+        # Get the artifact details
+        input_artifact_data = find_artifact(input_artifacts, input_artifact)
+
+        # Get S3 client to access artifact with
+        s3 = setup_s3_client(job_data)
+
+        # Get the JSON template file out of the artifact
+        template = get_template(s3, input_artifact_data, template_file)
+        print("Template: " + str(template))
+
+        # Get validation rules from DynamoDB
+        rules = get_rules()
+
+        # Validate template from risk perspective
+        risk, failedRules = evaluate_template(rules, template)
+
+        # Based on risk, store the template in the correct S3 bucket for future process
+        s3_next_step(s3, output_bucket, risk, failedRules, template, job_id)
+
+    except Exception as e:
+        # In case of unexpected exceptions, the job is failed and exception message is logged
+        print('Function failed due to exception.')
+        print(e)
+        traceback.print_exc()
+        put_job_failure(job_id, 'Function exception: ' + str(e))
+
+    print('Function complete.')
+    return "Complete."
