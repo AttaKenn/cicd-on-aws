@@ -1,5 +1,5 @@
 html {
-    background-image: url(../image/cal-img.jpg);
+    background-image: url(../images/cal-img.jpg);
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
@@ -33,6 +33,7 @@ html {
     text-align: center;
   }
   
+  /* Touch of Glass Morphism ;) */
   #calculator {
     width: 300px;
     margin: 20px auto;
