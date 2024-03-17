@@ -263,3 +263,43 @@ def add_rules(logTable):
             'active' : {'S': "N"}
         }
     )
+
+def evaluate_template(rules, template):
+    # Validate rules and increase risk value
+    risk = 0
+    # Extract Security Group Resources
+    sgResources = []
+    ec2Resources = []
+    failedRules = []
+    jsonTemplate = json.loads(template)
+    
+    print(rules)
+    for key in jsonTemplate['Resources'].keys():
+        if "SecurityGroup" in jsonTemplate['Resources'][key]['Type']:
+            sgResources.append(jsonTemplate['Resources'][key])
+        elif "EC2::Instance" in jsonTemplate['Resources'][key]['Type']:
+            ec2Resources.append(jsonTemplate['Resources'][key])
+
+    for n in range(len(sgResources)):
+        for m in range(len(rules['sgRules'])):
+            if rules['sgRules'][m]['active']['S'] == "Y":
+                if re.match(rules['sgRules'][m]['ruledata']['S'], str(sgResources[n])):
+                    risk = risk + int(rules['sgRules'][m]['riskvalue']['N'])
+                    failedRules.append(str(rules['sgRules'][m]['rule']['S']))
+                    print("Matched rule: " + str(rules['sgRules'][m]['rule']['S']))
+                    print("Resource: " + str(sgResources[n]))
+                    print("Riskvalue: " + rules['sgRules'][m]['riskvalue']['N'])
+                    print("")
+
+    for n in range(len(ec2Resources)):
+        for m in range(len(rules['ec2Rules'])):
+            if rules['ec2Rules'][m]['active']['S'] == "Y":
+                if re.match(rules['ec2Rules'][m]['ruledata']['S'], str(ec2Resources[n])):
+                    risk = risk + int(rules['ec2Rules'][m]['riskvalue']['N'])
+                    failedRules.append(str(rules['ec2Rules'][m]['rule']['S']))
+                    print("Matched rule: " + str(rules['ec2Rules'][m]['rule']['S']))
+                    print("Resource: " + str(ec2Resources[n]))
+                    print("Riskvalue: " + rules['ec2Rules'][m]['riskvalue']['N'])
+                    print("")
+    print("Risk value: " +str(risk))
+    return risk, failedRules
