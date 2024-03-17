@@ -167,3 +167,51 @@ def setup_s3_client(job_data):
         aws_secret_access_key=key_secret,
         aws_session_token=session_token)
     return session.client('s3', config=botocore.client.Config(signature_version='s3v4'))
+
+def get_rules():
+    # Find table
+    client = boto3.client('dynamodb')
+    response = client.list_tables()
+    logTable = ""
+    for i in range(len(response['TableNames'])):
+        if "DBRules" in response['TableNames'][i]:
+            logTable = response['TableNames'][i]
+
+    # Verify that rules are created and if not, create them
+    response = client.scan(
+        TableName=logTable,
+        AttributesToGet=[
+            'rule',
+        ]
+    )
+    if len(response['Items']) == 0:
+        add_rules(logTable)
+        time.sleep(5)
+        # Get all rules from DDB.
+        response = client.scan(
+            TableName=logTable,
+            AttributesToGet=[
+                'rule',
+            ]
+        )
+    
+    # Rules have rule, ruledata, type and weight
+    rules = dict()
+    sgRules = []
+    ec2Rules = []
+
+    for n in range(len(response['Items'])):
+        rule = client.get_item(
+            TableName=logTable,
+            Key={
+                'rule': {'S':response['Items'][n]['rule']['S']}
+            },
+            ConsistentRead=True
+        )['Item']
+        if rule['category']['S'] == "SecurityGroup":
+            sgRules.append(rule)
+        elif rule['category']['S'] == "EC2Instance":
+            ec2Rules.append(rule)
+    rules['sgRules'] = sgRules
+    rules['ec2Rules'] = ec2Rules
+    return rules
