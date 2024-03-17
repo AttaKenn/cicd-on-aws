@@ -144,3 +144,26 @@ def get_user_params(job_data):
         raise Exception('Your UserParameters JSON must include the output bucket')    
 
     return decoded_parameters
+
+def setup_s3_client(job_data):
+    """Creates an S3 client
+
+    Uses the credentials passed in the event by CodePipeline. These
+    credentials can be used to access the artifact bucket.
+
+    Args:
+        job_data: The job data structure
+
+    Returns:
+        An S3 client with the appropriate credentials
+
+    """
+    key_id = job_data['artifactCredentials']['accessKeyId']
+    key_secret = job_data['artifactCredentials']['secretAccessKey']
+    session_token = job_data['artifactCredentials']['sessionToken']
+
+    session = Session(
+        aws_access_key_id=key_id,
+        aws_secret_access_key=key_secret,
+        aws_session_token=session_token)
+    return session.client('s3', config=botocore.client.Config(signature_version='s3v4'))
