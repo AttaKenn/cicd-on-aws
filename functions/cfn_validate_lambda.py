@@ -303,3 +303,38 @@ def evaluate_template(rules, template):
                     print("")
     print("Risk value: " +str(risk))
     return risk, failedRules
+
+def s3_next_step(s3, bucket, risk, failedRules, template, job_id):
+    # Store data in temporary physical file
+    s3Client = boto3.client('s3', config=botocore.client.Config(signature_version='s3v4'))
+    tmp_file = tempfile.NamedTemporaryFile()
+    tmp_zip = tempfile.NamedTemporaryFile()
+    for item in template:
+        tmp_file.write(b'item')
+    tmp_file.flush()
+    # Process file based on risk value
+    if risk < 5:
+        with zipfile.ZipFile(tmp_zip.name, 'w') as zip:
+            zip.write(tmp_file.name, "valid.template.json")
+            zip.close()
+            s3Client.upload_file( 
+                tmp_zip.name,
+                bucket,
+                'valid.template.zip')
+        tmp_file.close()
+        put_job_success(job_id, 'Job successful, minimal or no risk detected.')
+    elif 5 <= risk < 50:
+        with zipfile.ZipFile(tmp_zip.name, 'w') as zip:
+            zip.write(tmp_file.name, "flagged.template.json")
+            zip.close()
+            s3Client.upload_file( 
+                tmp_zip.name,
+                bucket,
+                'flagged.template.zip')
+        tmp_file.close()
+        put_job_success(job_id, 'Job successful, medium risk detected, manual approval needed.')
+    elif risk >= 50:
+        tmp_file.close()
+        print("High risk file, fail pipeline")
+        put_job_failure(job_id, 'Function exception: Failed filters ' + str(failedRules))
+    return 0
