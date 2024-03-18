@@ -50,6 +50,56 @@
                     }
                 ]
             }
+        },
+        "AutoScalingGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": {
+                "HealthCheckType": "ELB",
+                "HealthCheckGracePeriod": 300,
+                "MinSize": 3,
+                "MaxSize": 3,
+                "LaunchConfigurationName": {
+                    "Fn::ImportValue": {
+                        "Fn::Sub": "${SharedResourceStack}:LaunchConfig"
+                    }
+                },
+                "VPCZoneIdentifier": {
+                    "Fn::Split": [
+                        ",",
+                        {
+                            "Fn::ImportValue": {
+                                "Fn::Sub": "${SharedResourceStack}:PrivateSubnets"
+                            }
+                        }
+                    ]
+                },
+                "TargetGroupARNs": [
+                    {
+                        "Ref": "LoadBalancerTargetGroup"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    {
+                                        "Fn::ImportValue": {
+                                            "Fn::Sub": "${SharedResourceStack}:ApplicationName"
+                                        }
+                                    },
+                                    {
+                                        "Ref": "Stage"
+                                    }
+                                ]
+                            ]
+                        },
+                        "PropagateAtLaunch": true
+                    }
+                ]
+            }
         }
     }
 }
