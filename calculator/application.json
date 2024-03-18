@@ -17,5 +17,39 @@
             "AllowedPattern": "^[a-zA-Z][-a-zA-Z0-9]*$",
             "Default": "Prod"
         }
+    },
+    "Resources": {
+        "DeploymentGroup": {
+            "Type": "AWS::CodeDeploy::DeploymentGroup",
+            "Properties": {
+                "DeploymentGroupName": {
+                    "Fn::Join": [
+                        "-",
+                        [
+                            {
+                                "Ref": "AWS::StackName"
+                            },
+                            "DeploymentGroup"
+                        ]
+                    ]
+                },
+                "ApplicationName": {
+                    "Fn::ImportValue": {
+                        "Fn::Sub": "${SharedResourceStack}:CodeDeployApplication"
+                    }
+                },
+                "ServiceRoleArn": {
+                    "Fn::ImportValue": {
+                        "Fn::Sub": "${SharedResourceStack}:CodeDeployRole"
+                    }
+                },
+                "DeploymentConfigName": "CodeDeployDefault.AllAtOnce",
+                "AutoScalingGroups": [
+                    {
+                        "Ref": "AutoScalingGroup"
+                    }
+                ]
+            }
+        }
     }
 }
