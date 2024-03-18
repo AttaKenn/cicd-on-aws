@@ -1,0 +1,21 @@
+{
+    "Description": "This CloudFormation json template sets up the simple calculator application on an AutoScaling group, behind an Application Load Balancer using a CodeDeploy application.",
+    "Parameters": {
+        "SharedResourceStack": {
+            "Description": "Name of an active CloudFormation stack that contains shared resources, such as the VPC.",
+            "Type": "String",
+            "MinLength": 1,
+            "MaxLength": 255,
+            "AllowedPattern": "^[a-zA-Z][-a-zA-Z0-9]*$",
+            "Default": "shared-resources"
+        },
+        "Stage": {
+            "Description": "Release stage",
+            "Type": "String",
+            "MinLength": 1,
+            "MaxLength": 255,
+            "AllowedPattern": "^[a-zA-Z][-a-zA-Z0-9]*$",
+            "Default": "Prod"
+        }
+    }
+}
