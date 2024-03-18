@@ -141,6 +141,21 @@
                     }
                 ]
             }
+        },
+        "LoadBalancerTargetGroup": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties": {
+                "HealthCheckIntervalSeconds": 30,
+                "UnhealthyThresholdCount": 2,
+                "HealthyThresholdCount": 2,
+                "Port": 8080,
+                "Protocol": "HTTP",
+                "VpcId": {
+                    "Fn::ImportValue": {
+                        "Fn::Sub": "${SharedResourceStack}:VPC"
+                    }
+                }
+            }
         }
     }
 }
