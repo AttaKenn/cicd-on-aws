@@ -118,6 +118,29 @@
                 "Port": 80,
                 "Protocol": "HTTP"
             }
+        },
+        "LoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "Scheme": "internet-facing",
+                "Subnets": {
+                    "Fn::Split": [
+                        ",",
+                        {
+                            "Fn::ImportValue": {
+                                "Fn::Sub": "${SharedResourceStack}:PublicSubnets"
+                            }
+                        }
+                    ]
+                },
+                "SecurityGroups": [
+                    {
+                        "Fn::ImportValue": {
+                            "Fn::Sub": "${SharedResourceStack}:PublicHttpIngressSecurityGroup"
+                        }
+                    }
+                ]
+            }
         }
     }
 }
