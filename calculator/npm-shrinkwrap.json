@@ -1,0 +1,61 @@
+{
+    "name": "simple-calculator-service",
+    "version": "1.0.0",
+    "lockfileVersion": 3,
+    "requires": true,
+    "packages": {
+      "": {
+        "name": "simple-calculator-service",
+        "version": "1.0.0",
+        "dependencies": {
+          "express": "^4.13.3",
+          "express-redis-cache": "^0.1.0",
+          "numeral": "^2.0.0",
+          "redis": "^2.8.0"
+        },
+        "devDependencies": {
+          "chai": "^3.5.0",
+          "chai-http": "^3.0.0",
+          "mocha": "^4.0.0",
+          "nyc": "^11.2.0"
+        }
+      },
+      "node_modules/chai": {
+        "version": "3.5.0",
+        "resolved": "https://registry.npmjs.org/chai/-/chai-3.5.0.tgz",
+        "dev": true
+      },
+      "node_modules/chai-http": {
+        "version": "3.0.0",
+        "resolved": "https://registry.npmjs.org/chai-http/-/chai-http-3.0.0.tgz",
+        "dev": true
+      },
+      "node_modules/express": {
+        "version": "4.16.2",
+        "resolved": "https://registry.npmjs.org/express/-/express-4.16.2.tgz"
+      },
+      "node_modules/express-redis-cache": {
+        "version": "0.1.9",
+        "resolved": "https://registry.npmjs.org/express-redis-cache/-/express-redis-cache-0.1.9.tgz"
+      },
+      "node_modules/mocha": {
+        "version": "4.0.1",
+        "resolved": "https://registry.npmjs.org/mocha/-/mocha-4.0.1.tgz",
+        "dev": true
+      },
+      "node_modules/numeral": {
+        "version": "2.0.6",
+        "resolved": "https://registry.npmjs.org/numeral/-/numeral-2.0.6.tgz"
+      },
+      "node_modules/nyc": {
+        "version": "11.3.0",
+        "resolved": "https://registry.npmjs.org/nyc/-/nyc-11.3.0.tgz",
+        "dev": true
+      },
+      "node_modules/redis": {
+        "version": "2.8.0",
+        "resolved": "https://registry.npmjs.org/redis/-/redis-2.8.0.tgz"
+      }
+    }
+  }
+  
