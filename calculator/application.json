@@ -157,5 +157,19 @@
                 }
             }
         }
+    },
+    "Outputs": {
+        "Url": {
+            "Description": "Calculator Application URL",
+            "value": {
+                "Fn::Sub": "http://${LoadBalancer.DNSName}"
+            }
+        },
+        "DeploymentGroup": {
+            "Description": "Calculator Application Deployment Group",
+            "value": {
+                "Ref": "DeploymentGroup"
+            }
+        }
     }
 }
