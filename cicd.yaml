@@ -613,7 +613,7 @@ Resources:
       Description: Checks the CloudFormation template for known violations
       Timeout: 60
       Handler: cfn_validate_lambda.lambda_handler
-      Runtime: python3.7
+      Runtime: python3.12
       TracingConfig:
         Mode: Active
 
@@ -630,7 +630,7 @@ Resources:
       Description: Test to check url passed in the event for a 200 status code
       Timeout: 60
       Handler: index.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs18.x
       TracingConfig:
         Mode: Active
 
@@ -693,7 +693,7 @@ Resources:
         S3Key: functions.zip
       Handler: s3_object_remover.lambda_handler
       Role: !GetAtt 'LambdaExecutionRole.Arn'
-      Runtime: python3.7
+      Runtime: python3.12
       Timeout: 500
 
   # Custom bucket maintenance functions.
