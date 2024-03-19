@@ -160,14 +160,14 @@
     },
     "Outputs": {
         "Url": {
-            "Description": "Calculator Application URL",
-            "value": {
+            "Description": "Calculator application URL",
+            "Value": {
                 "Fn::Sub": "http://${LoadBalancer.DNSName}"
             }
         },
         "DeploymentGroup": {
-            "Description": "Calculator Application Deployment Group",
-            "value": {
+            "Description": "Calculator application deployment group",
+            "Value": {
                 "Ref": "DeploymentGroup"
             }
         }
