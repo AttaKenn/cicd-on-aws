@@ -458,6 +458,7 @@ Resources:
           - Action:
             - 'cloudformation:CreateStack'
             - 'cloudformation:DescribeStacks'
+            - 'cloudformation:DescribeStackEvents'
             - 'cloudformation:DeleteStack'
             - 'cloudformation:UpdateStack'
             - 'cloudformation:CreateChangeSet'
