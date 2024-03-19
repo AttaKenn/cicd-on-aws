@@ -253,7 +253,7 @@ Resources:
       Source:
         Type: CODECOMMIT
         Location: !GetAtt CodeCommitRepo.CloneUrlHttp
-        BuildSpec: buildspecs/build-with-cache.yml
+        BuildSpec: buildspec.yml
     Type: 'AWS::CodeBuild::Project'
 
   # IAM Resources for the CI/CD pipeline
