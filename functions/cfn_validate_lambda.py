@@ -337,7 +337,7 @@ def s3_next_step(s3, bucket, risk, failedRules, template, job_id):
         put_job_failure(job_id, 'Function exception: Failed filters ' + str(failedRules))
     return 0
 
-def lambda_handler(event):
+def lambda_handler(event, context):
     """The Lambda function handler
 
     Validates input CloudFormation template for security vulnerabilities. 
