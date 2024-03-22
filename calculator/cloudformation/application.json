@@ -56,7 +56,7 @@
             "Properties": {
                 "HealthCheckType": "ELB",
                 "HealthCheckGracePeriod": 300,
-                "MinSize": 3,
+                "MinSize": 1,
                 "MaxSize": 3,
                 "LaunchConfigurationName": {
                     "Fn::ImportValue": {
