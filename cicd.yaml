@@ -34,8 +34,8 @@ Parameters:
     Default: simple-calculator
   LatestAmiId:
     Description: The AWS::EC2::Image::Id that will be pulled from parameter store to be used for application instances
-    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
-    Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+    Type: AWS::EC2::Image::Id
+    Default: ami-0a70b9d193ae8a799 # In this project, I deploy the CICD infra in us-west2 region (Oregon) and that's where this AMI ID is from
   OutputsPrefix:
     Description: The prefix for stack outputs that will be used for your pipeline resources
     Type: String
@@ -93,7 +93,7 @@ Resources:
           Bucket: !Sub ${codeBucket}
           Key: calculator.zip
 
-  # Shared Network Resources for the application environments
+  # Shared Network Resources for the application environments (Test & Prod)
   VPC:
     Type: "AWS::EC2::VPC"
     Properties:
@@ -300,7 +300,6 @@ Resources:
             Resource:
             - 'arn:aws:iam::*:role/aws-service-role/*'
           - Action:
-            - 'ssm:GetParameters'
             - 'autoscaling:*'
             - 'ec2:*'
             - 'codedeploy:*'
