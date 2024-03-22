@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link href="style.css" type="text/css" rel="stylesheet">
+  <title>A Simple Calculator</title>
+</head>
+<body>
+  <div id="content">
+    <h1>Simple Calculator Service</h1>
+    <div id="calculator">
+      <input id="a" type="text" name="a" size="8" /><br/>
+      <select id="operation" name="operation">
+	<option value="add" selected>+</option>
+	<option value="subtract">-</option>
+	<option value="multiply">*</option>
+	<option value="divide">/</option>
+  <option value="exponent">^</option>
+      </select><br/>
+      <input id="b" type="text" name="b" size="8" /><br/>
+      <button id="calculate" name="calculate">Calculate</button><br/>
+    </div>
+    <span id="result"></span>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
