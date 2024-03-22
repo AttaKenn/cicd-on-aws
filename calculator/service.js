@@ -7,6 +7,7 @@ const PORT = 8080;
 const HOST = '0.0.0.0';
 
 const app = express();
+app.use(express.static('public'));
 
 const USE_CACHE = process.env.USE_CACHE;
 const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
@@ -66,13 +67,8 @@ const sendResult = (value, res) => {
   res.send(formattedValue);
 }
 
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  next();
-});
-
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname + '/index.html'));
+  res.sendFile(path.join(__dirname + '/public/index.html'));
 })
 
 app.get('/add', cacheRoute(), (req, res) => {
