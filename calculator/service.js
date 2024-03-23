@@ -31,14 +31,6 @@ const createCache = () => {
       expire: 60
     });
 
-    cache.on('message', (message) => {
-      console.log("cache", message);
-    });
-
-    cache.on('error', (error) => {
-      console.error("cache", error);
-    });
-
     return cache;
   } else {
     return null;
