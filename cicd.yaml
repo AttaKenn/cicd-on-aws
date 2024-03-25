@@ -335,17 +335,11 @@ Resources:
           - s3:*
           - ec2:*
           - cloudformation:*
-          - xray:*
           Resource:
           - "*"
         - Effect: Allow
           Action:
           - dynamodb:*
-          Resource:
-          - "*"
-        - Effect: Allow
-          Action:
-          - sns:*
           Resource:
           - "*"
   CodeBuildPolicy:
