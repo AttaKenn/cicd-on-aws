@@ -16,6 +16,16 @@
             "MaxLength": 255,
             "AllowedPattern": "^[a-zA-Z][-a-zA-Z0-9]*$",
             "Default": "Prod"
+        },
+        "CPUPolicyTargetValue": {
+            "Type": "String",
+            "Description": "The target utilization for the CPU metric",
+            "Default": 80
+        },
+        "ALBRequestCountTargetValue": {
+            "Type": "String",
+            "Description": "The optimal average request count per instance during any one-minute interval",
+            "Default": 200
         }
     },
     "Resources": {
@@ -58,6 +68,7 @@
                 "HealthCheckGracePeriod": 300,
                 "MinSize": 1,
                 "MaxSize": 3,
+                "DefaultInstanceWarmup": 30,
                 "LaunchConfigurationName": {
                     "Fn::ImportValue": {
                         "Fn::Sub": "${SharedResourceStack}:LaunchConfig"
@@ -99,6 +110,64 @@
                         "PropagateAtLaunch": true
                     }
                 ]
+            }
+        },
+        "CPUPolicy": {
+            "Type": "AWS::AutoScaling::ScalingPolicy",
+            "Properties": {
+                "AutoScalingGroupName": {
+                    "Ref": "AutoScalingGroup"
+                },
+                "PolicyType": "TargetTrackingScaling",
+                "TargetTrackingConfiguration": {
+                    "PredefinedMetricSpecification": {
+                        "PredefinedMetricType": "ASGAverageCPUUtilization"
+                    },
+                    "TargetValue": {
+                        "Ref": "CPUPolicyTargetValue"
+                    }
+                }
+            }
+        },
+        "ALBRequestCountPolicy": {
+            "Type": "AWS::AutoScaling::ScalingPolicy",
+            "DependsOn": [
+                "LoadBalancerListener"
+            ],
+            "Properties": {
+                "AutoScalingGroupName": {
+                    "Ref": "AutoScalingGroup"
+                },
+                "PolicyType": "TargetTrackingScaling",
+                "TargetTrackingConfiguration": {
+                    "PredefinedMetricSpecification": {
+                        "PredefinedMetricType": "ALBRequestCountPerTarget",
+                        "ResourceLabel": {
+                            "Fn::Join": [
+                                "/",
+                                [
+                                    {
+                                        "Fn::GetAtt": [
+                                            "LoadBalancer",
+                                            "LoadBalancerFullName"
+                                        ]
+                                    }
+                                ],
+                                [
+                                    {
+                                        "Fn::GetAtt": [
+                                            "LoadBalancerTargetGroup",
+                                            "TargetGroupFullName"
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    "TargetValue": {
+                        "Ref": "ALBRequestCountTargetValue"
+                    }
+                }
             }
         },
         "LoadBalancerListener": {
