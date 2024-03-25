@@ -151,9 +151,7 @@
                                             "LoadBalancer",
                                             "LoadBalancerFullName"
                                         ]
-                                    }
-                                ],
-                                [
+                                    },
                                     {
                                         "Fn::GetAtt": [
                                             "LoadBalancerTargetGroup",
