@@ -29,7 +29,7 @@ Resources:
     Type: AWS::CodeDeploy::DeploymentGroup
     Properties:
       DeploymentGroupName: !Join
-      - '-'
+      - "-"
       - - !Ref AWS::StackName
         - DeploymentGroup
       ApplicationName: !ImportValue
@@ -58,7 +58,7 @@ Resources:
       Tags:
       - Key: Name
         Value: !Join
-        - '-'
+        - "-"
         - - !ImportValue
             Fn::Sub: ${SharedResourceStack}:ApplicationName
           - !Ref Stage
@@ -66,7 +66,7 @@ Resources:
   CPUPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
-      AutoScalingGroupName: !!Ref AutoScalingGroup
+      AutoScalingGroupName: !Ref AutoScalingGroup
       PolicyType: TargetTrackingScaling
       TargetTrackingConfiguration:
         PredefinedMetricSpecification:
@@ -75,7 +75,7 @@ Resources:
   ALBRequestCountPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     DependsOn:
-    - !Ref LoadBalancerListener
+    - LoadBalancerListener
     Properties:
       AutoScalingGroupName: !Ref AutoScalingGroup
       PolicyType: TargetTrackingScaling
@@ -83,7 +83,7 @@ Resources:
         PredefinedMetricSpecification:
           PredefinedMetricType: ALBRequestCountPerTarget
           ResourceLabel: !Join
-          - '/'
+          - "/"
           - - !GetAtt LoadBalancer.LoadBalancerFullName
           - - !GetAtt LoadBalancerTargetGroup.TargetGroupFullName
         TargetValue: !Ref ALBRequestCountTargetValue
