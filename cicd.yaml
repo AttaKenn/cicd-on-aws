@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "CI/CD infrastructure for a simple calculator application"
+Description: CI/CD infrastructure for a simple calculator application
 Parameters:
   codeBucket:
     Description: S3 Bucket where functions.zip and calculator.zip are stored.
@@ -7,44 +7,44 @@ Parameters:
   EnvironmentName:
     Description: An environment name that will be prefixed to resource names
     Type: String
-    Default: "CI-CD"
+    Default: CI-CD
   VpcCIDR:
     Description: IP range (CIDR notation) for the VPC
     Type: String
-    Default: "192.168.0.0/16"
+    Default: 192.168.0.0/16
     AllowedPattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([1][6-9]|[2][0-8]))$
   PublicSubnet1CIDR:
     Description: IP range (CIDR notation) for the PUBLIC subnet in the FIRST Availability Zone
     Type: String
-    Default: "192.168.0.0/20"
+    Default: 192.168.0.0/20
     AllowedPattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([1][6-9]|[2][0-8]))$
   PrivateSubnet1CIDR:
     Description: IP range (CIDR notation) for the PRIVATE subnet in the SECOND Availability Zone
     Type: String
-    Default: "192.168.64.0/20"
+    Default: 192.168.64.0/20
     AllowedPattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([1][6-9]|[2][0-8]))$
   PublicSubnet2CIDR:
     Description: IP range (CIDR notation) for the PUBLIC subnet in the SECOND Availability Zone
     Type: String
-    Default: "192.168.16.0/20"
+    Default: 192.168.16.0/20
     AllowedPattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([1][6-9]|[2][0-8]))$
   ApplicationName:
     Description: An application name that will be prefixed to resource names
     Type: String
     Default: simple-calculator
   LatestAmiId:
-    Description: The AWS::EC2::Image::Id that will be pulled from parameter store to be used for application instances
-    Type: AWS::EC2::Image::Id
-    Default: ami-0a70b9d193ae8a799 # In this project, I deploy the CICD infra in us-west2 region (Oregon) and that's where this AMI ID is from
+    Description: The AWS::EC2::Image::Id that will be pulled from AWS System Manager parameter store (Publicly Available on AWS) to be used for application instances
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64
   OutputsPrefix:
-    Description: The prefix for stack outputs that will be used for your pipeline resources
+    Description: The prefix for stack outputs that will be used for the pipeline resources
     Type: String
     Default: shared-resources
 Metadata:
   # Parameter formatting to help explain what parameters need to be changed.
   # codeBucket is the only parameter not having a default value because in this project I
-  # create the S3 bucket and upload the files (functions.zip and calculator.zip) using the
-  # AWS CLI from my local machine.
+  # create the S3 bucket and upload the files (functions.zip and calculator.zip) into it using the
+  # AWS CLI from my AWS Cloudshell (You can access and use it in your browser from your management console)
   AWS::CloudFormation::Interface:
     ParameterGroups:
     - Label:
@@ -84,10 +84,10 @@ Metadata:
 Resources:
   # Code Repository for the simple Calculator application (CodeCommit Repo)
   CodeCommitRepo:
-    Type: "AWS::CodeCommit::Repository"
+    Type: AWS::CodeCommit::Repository
     Properties:
       RepositoryName: !Ref EnvironmentName
-      RepositoryDescription: "Calculator application repository"
+      RepositoryDescription: Calculator application repository
       Code:
         S3:
           Bucket: !Sub ${codeBucket}
@@ -95,27 +95,27 @@ Resources:
 
   # Shared Network Resources for the application environments (Test & Prod)
   VPC:
-    Type: "AWS::EC2::VPC"
+    Type: AWS::EC2::VPC
     Properties:
       CidrBlock: !Ref VpcCIDR
       EnableDnsSupport: true
       EnableDnsHostnames: true
       Tags:
       - Key: Name
-        Value: !Sub "${EnvironmentName} VPC"
+        Value: !Sub ${EnvironmentName} VPC
   InternetGateway:
-    Type: "AWS::EC2::InternetGateway"
+    Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
       - Key: Name
-        Value: !Sub "${EnvironmentName} IG"
+        Value: !Sub ${EnvironmentName} IG
   InternetGatewayAttachment:
-    Type: "AWS::EC2::VPCGatewayAttachment"
+    Type: AWS::EC2::VPCGatewayAttachment
     Properties:
       InternetGatewayId: !Ref InternetGateway
       VpcId: !Ref VPC
   PublicSubnet1:
-    Type: 'AWS::EC2::Subnet'
+    Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       AvailabilityZone:
@@ -126,7 +126,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
       - Key: Name
-        Value: !Sub '${EnvironmentName} Public Subnet 1'
+        Value: !Sub ${EnvironmentName} Public Subnet 1
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -139,7 +139,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
       - Key: Name
-        Value: !Sub '${ApplicationName} Public Subnet 2'
+        Value: !Sub ${ApplicationName} Public Subnet 2
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -152,7 +152,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
       - Key: Name
-        Value: !Sub '${ApplicationName} Private Subnet 1'
+        Value: !Sub ${ApplicationName} Private Subnet 1
   NatGateway1EIP:
     Type: AWS::EC2::EIP
     DependsOn: InternetGatewayAttachment
@@ -164,21 +164,21 @@ Resources:
       AllocationId: !GetAtt NatGateway1EIP.AllocationId
       SubnetId: !Ref PublicSubnet2
   PublicRouteTable:
-    Type: 'AWS::EC2::RouteTable'
+    Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
       - Key: Name
-        Value: !Sub '${EnvironmentName} Public Routes'
+        Value: !Sub ${EnvironmentName} Public Routes
   DefaultPublicRoute:
-    Type: 'AWS::EC2::Route'
+    Type: AWS::EC2::Route
     DependsOn: InternetGatewayAttachment
     Properties:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
   PublicSubnet1RouteTableAssociation:
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet1
@@ -228,6 +228,7 @@ Resources:
         ToPort: 8080
         SourceSecurityGroupId:
           Ref: PublicHttpIngressSecurityGroup
+
   # CodeBuild Project to build the application and run unit tests
   CodeBuildProject:
     DependsOn:
@@ -243,25 +244,25 @@ Resources:
       Cache:
         Location: !Ref CacheBucket
         Type: S3
-      Description: !Sub 'CodeBuild Project for ${AWS::StackName}'
+      Description: !Sub CodeBuild Project for ${AWS::StackName}
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: 'aws/codebuild/nodejs:8.11.0'
+        Image: aws/codebuild/nodejs:8.11.0
         Type: LINUX_CONTAINER
-      Name: !Ref 'AWS::StackName'
+      Name: !Ref AWS::StackName
       ServiceRole: !Ref CodeBuildRole
       Source:
         Type: CODECOMMIT
         Location: !GetAtt CodeCommitRepo.CloneUrlHttp
         BuildSpec: buildspec.yml
-    Type: 'AWS::CodeBuild::Project'
+    Type: AWS::CodeBuild::Project
 
   # IAM Resources for the CI/CD pipeline
   CloudFormationTrustRole:
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-        - Action: 'sts:AssumeRole'
+        - Action: sts:AssumeRole
           Effect: Allow
           Principal:
             Service:
@@ -271,49 +272,50 @@ Resources:
       - PolicyDocument:
           Statement:
           - Action:
-            - 'iam:CreateInstanceProfile'
-            - 'iam:DeleteInstanceProfile'
-            - 'iam:GetRole'
-            - 'iam:GetInstanceProfile'
-            - 'iam:RemoveRoleFromInstanceProfile'
-            - 'iam:UpdateRoleDescription'
-            - 'iam:CreateRole'
-            - 'iam:DeleteRole'
-            - 'iam:AttachRolePolicy'
-            - 'iam:PutRolePolicy'
-            - 'iam:ListInstanceProfiles'
-            - 'iam:AddRoleToInstanceProfile'
-            - 'iam:ListInstanceProfilesForRole'
-            - 'iam:PassRole'
-            - 'iam:DetachRolePolicy'
-            - 'iam:DeleteRolePolicy'
-            - 'iam:ListRolePolicies'
-            - 'iam:ListRoles'
-            - 'iam:GetRolePolicy'
+            - iam:CreateInstanceProfile
+            - iam:DeleteInstanceProfile
+            - iam:GetRole
+            - iam:GetInstanceProfile
+            - iam:RemoveRoleFromInstanceProfile
+            - iam:UpdateRoleDescription
+            - iam:CreateRole
+            - iam:DeleteRole
+            - iam:AttachRolePolicy
+            - iam:PutRolePolicy
+            - iam:ListInstanceProfiles
+            - iam:AddRoleToInstanceProfile
+            - iam:ListInstanceProfilesForRole
+            - iam:PassRole
+            - iam:DetachRolePolicy
+            - iam:DeleteRolePolicy
+            - iam:ListRolePolicies
+            - iam:ListRoles
+            - iam:GetRolePolicy
             Effect: Allow
             Resource:
-            - !Sub 'arn:aws:iam::*:role/${AWS::StackName}*'
-            - !Sub 'arn:aws:iam::*:instance-profile/${AWS::StackName}*'
+            - !Sub arn:aws:iam::*:role/${AWS::StackName}*
+            - !Sub arn:aws:iam::*:instance-profile/${AWS::StackName}*
           - Action:
-            - 'iam:CreateServiceLinkedRole'
+            - iam:CreateServiceLinkedRole
             Effect: Allow
             Resource:
-            - 'arn:aws:iam::*:role/aws-service-role/*'
+            - arn:aws:iam::*:role/aws-service-role/*
           - Action:
-            - 'autoscaling:*'
-            - 'ec2:*'
-            - 'codedeploy:*'
-            - 'elasticloadbalancing:*'
+            - ssm:GetParameters
+            - autoscaling:*
+            - ec2:*
+            - codedeploy:*
+            - elasticloadbalancing:*
             Effect: Allow
             Resource:
-            - '*'
-        PolicyName: !Sub '${AWS::StackName}-CloudFormationRolePolicy'
-      RoleName: !Sub '${AWS::StackName}-CloudFormation'
-    Type: 'AWS::IAM::Role'
+            - "*"
+        PolicyName: !Sub ${AWS::StackName}-CloudFormationRolePolicy
+      RoleName: !Sub ${AWS::StackName}-CloudFormation
+    Type: AWS::IAM::Role
   LambdaCodePipelineExecutionPolicy:
     DependsOn:
     - CloudFormationTrustRole
-    Type: 'AWS::IAM::Policy'
+    Type: AWS::IAM::Policy
     Properties:
       PolicyName: LambdaRolePolicy
       Roles:
@@ -323,43 +325,43 @@ Resources:
         Statement:
         - Effect: Allow
           Action:
-          - 'logs:*'
+          - logs:*
           Resource:
-          - 'arn:aws:logs:*:*:*'
+          - arn:aws:logs:*:*:*
         - Effect: Allow
           Action:
-          - 'codepipeline:PutJobSuccessResult'
-          - 'codepipeline:PutJobFailureResult'
-          - 's3:*'
-          - 'ec2:*'
-          - 'cloudformation:*'
-          - 'xray:*'
+          - codepipeline:PutJobSuccessResult
+          - codepipeline:PutJobFailureResult
+          - s3:*
+          - ec2:*
+          - cloudformation:*
+          - xray:*
           Resource:
-          - '*'
+          - "*"
         - Effect: Allow
           Action:
-          - 'dynamodb:*'
+          - dynamodb:*
           Resource:
-          - '*'
+          - "*"
         - Effect: Allow
           Action:
-          - 'sns:*'
+          - sns:*
           Resource:
-          - '*'
+          - "*"
   CodeBuildPolicy:
     Properties:
       PolicyDocument:
         Statement:
         - Action:
-          - 'logs:CreateLogGroup'
-          - 'logs:CreateLogStream'
-          - 'logs:PutLogEvents'
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
           Effect: Allow
-          Resource: '*'
+          Resource: "*"
         - Action:
-          - 's3:PutObject'
-          - 's3:GetObject'
-          - 's3:GetObjectVersion'
+          - s3:PutObject
+          - s3:GetObject
+          - s3:GetObjectVersion
           Effect: Allow
           Resource:
           - !GetAtt ArtifactsBucket.Arn
@@ -367,32 +369,32 @@ Resources:
           - !GetAtt CacheBucket.Arn
           - !Sub ${CacheBucket.Arn}/*
         - Action:
-          - 'codecommit:GitPull'
+          - codecommit:GitPull
           Effect: Allow
           Resource: !GetAtt CodeCommitRepo.Arn
         - Action:
-          - 'kms:GenerateDataKey*'
-          - 'kms:Encrypt'
-          - 'kms:Decrypt'
+          - kms:GenerateDataKey*
+          - kms:Encrypt
+          - kms:Decrypt
           Effect: Allow
-          Resource: !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/s3'
-      PolicyName: !Sub '${AWS::StackName}-CodeBuildPolicy'
+          Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/s3
+      PolicyName: !Sub ${AWS::StackName}-CodeBuildPolicy
       Roles:
       - !Ref CodeBuildRole
-    Type: 'AWS::IAM::Policy'
+    Type: AWS::IAM::Policy
   CodeBuildRole:
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-        - Action: 'sts:AssumeRole'
+        - Action: sts:AssumeRole
           Effect: Allow
           Principal:
             Service: codebuild.amazonaws.com
       Path: /
-      RoleName: !Sub '${AWS::StackName}-CodeBuild'
-    Type: 'AWS::IAM::Role'
+      RoleName: !Sub ${AWS::StackName}-CodeBuild
+    Type: AWS::IAM::Role
   CodePipelineLambdaRole:
-    Type: 'AWS::IAM::Role'
+    Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -402,13 +404,13 @@ Resources:
             Service:
             - lambda.amazonaws.com
           Action:
-          - 'sts:AssumeRole'
+          - sts:AssumeRole
       Path: /
   CodePipelineTrustRole:
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-        - Action: "sts:AssumeRole"
+        - Action: sts:AssumeRole
           Effect: Allow
           Principal:
             Service:
@@ -419,83 +421,83 @@ Resources:
       - PolicyDocument:
           Statement:
           - Action:
-            - 's3:GetObject'
-            - 's3:GetObjectVersion'
-            - 's3:GetBucketVersioning'
-            - 's3:PutObject'
+            - s3:GetObject
+            - s3:GetObjectVersion
+            - s3:GetBucketVersioning
+            - s3:PutObject
             Effect: Allow
             Resource:
             - !GetAtt ArtifactsBucket.Arn
             - !Sub ${ArtifactsBucket.Arn}/*
           - Action:
-            - 'codecommit:CancelUploadArchive'
-            - 'codecommit:GetBranch'
-            - 'codecommit:GetCommit'
-            - 'codecommit:GetUploadArchiveStatus'
-            - 'codecommit:UploadArchive'
+            - codecommit:CancelUploadArchive
+            - codecommit:GetBranch
+            - codecommit:GetCommit
+            - codecommit:GetUploadArchiveStatus
+            - codecommit:UploadArchive
             Effect: Allow
             Resource:
             - !GetAtt CodeCommitRepo.Arn
           - Action:
-            - 'codebuild:StartBuild'
-            - 'codebuild:BatchGetBuilds'
-            - 'codebuild:StopBuild'
+            - codebuild:StartBuild
+            - codebuild:BatchGetBuilds
+            - codebuild:StopBuild
             Effect: Allow
             Resource:
             - !GetAtt CodeBuildProject.Arn
           - Action:
-            - 'codedeploy:CreateDeployment'
-            - 'codedeploy:GetApplicationRevision'
-            - 'codedeploy:GetDeployment'
-            - 'codedeploy:GetDeploymentConfig'
-            - 'codedeploy:RegisterApplicationRevision'
+            - codedeploy:CreateDeployment
+            - codedeploy:GetApplicationRevision
+            - codedeploy:GetDeployment
+            - codedeploy:GetDeploymentConfig
+            - codedeploy:RegisterApplicationRevision
             Effect: Allow
             Resource:
             - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${AWS::StackName}*
             - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${AWS::StackName}*
             - !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentconfig:*
           - Action:
-            - 'cloudformation:CreateStack'
-            - 'cloudformation:DescribeStacks'
-            - 'cloudformation:DescribeStackEvents'
-            - 'cloudformation:DeleteStack'
-            - 'cloudformation:UpdateStack'
-            - 'cloudformation:CreateChangeSet'
-            - 'cloudformation:ExecuteChangeSet'
-            - 'cloudformation:DeleteChangeSet'
-            - 'cloudformation:DescribeChangeSet'
-            - 'cloudformation:SetStackPolicy'
+            - cloudformation:CreateStack
+            - cloudformation:DescribeStacks
+            - cloudformation:DescribeStackEvents
+            - cloudformation:DeleteStack
+            - cloudformation:UpdateStack
+            - cloudformation:CreateChangeSet
+            - cloudformation:ExecuteChangeSet
+            - cloudformation:DeleteChangeSet
+            - cloudformation:DescribeChangeSet
+            - cloudformation:SetStackPolicy
             Effect: Allow
             Resource:
             - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}*
           - Action:
-            - 'iam:PassRole'
+            - iam:PassRole
             Effect: Allow
             Resource:
             - !GetAtt CloudFormationTrustRole.Arn
           - Action:
-            - 'lambda:InvokeFunction'
+            - lambda:InvokeFunction
             Effect: Allow
-            Resource: '*'
+            Resource: "*"
         PolicyName: !Sub ${AWS::StackName}-CodePipelineRolePolicy
       RoleName: !Sub ${AWS::StackName}-CodePipeline
-    Type: 'AWS::IAM::Role'
+    Type: AWS::IAM::Role
   CodeDeployRole:
-    Type: "AWS::IAM::Role"
+    Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: 2012-10-17
         Statement:
-        - Effect: "Allow"
+        - Effect: Allow
           Principal:
             Service:
-            - "codedeploy.amazonaws.com"
+            - codedeploy.amazonaws.com
           Action:
-          - "sts:AssumeRole"
+          - sts:AssumeRole
       Policies:
       - PolicyName: allow-autoscaling
         PolicyDocument:
-          Version: "2012-10-17"
+          Version: 2012-10-17
           Statement:
           - Effect: Allow
             Action:
@@ -503,31 +505,31 @@ Resources:
             - autoscaling:*
             Resource: "*"
   InstanceRole:
-    Type: "AWS::IAM::Role"
+    Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: 2012-10-17
         Statement:
-        - Effect: "Allow"
+        - Effect: Allow
           Principal:
             Service:
-            - "ec2.amazonaws.com"
-            - "codedeploy.amazonaws.com"
+            - ec2.amazonaws.com
+            - codedeploy.amazonaws.com
           Action:
-          - "sts:AssumeRole"
+          - sts:AssumeRole
       Policies:
-      - PolicyName: "allow-deployment-bucket"
+      - PolicyName: allow-deployment-bucket
         PolicyDocument:
-          Version: "2012-10-17"
+          Version: 2012-10-17
           Statement:
-          - Effect: "Allow"
+          - Effect: Allow
             Action:
-            - "s3:GetObject"
-            - "s3:GetObjectVersion"
+            - s3:GetObject
+            - s3:GetObjectVersion
             Resource:
             - !Sub ${ArtifactsBucket.Arn}/*
   InstanceProfile:
-    Type: "AWS::IAM::InstanceProfile"
+    Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
       - Ref: InstanceRole
@@ -535,7 +537,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: 2012-10-17
         Statement:
         - Effect: Allow
           Principal:
@@ -547,7 +549,7 @@ Resources:
       Policies:
       - PolicyName: !Sub lambdaLogsCreatePolicy-${AWS::StackName}
         PolicyDocument:
-          Version: '2012-10-17'
+          Version: 2012-10-17
           Statement:
           - Effect: Allow
             Action:
@@ -555,7 +557,7 @@ Resources:
             Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
       - PolicyName: !Sub lambdaLogPolicy-${AWS::StackName}
         PolicyDocument:
-          Version: '2012-10-17'
+          Version: 2012-10-17
           Statement:
           - Effect: Allow
             Action:
@@ -563,45 +565,32 @@ Resources:
             - logs:PutLogEvents
             Resource:
             - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*:*
-      - PolicyName: !Sub lambdaS3AccessPolicy-${AWS::StackName}
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-          - Effect: Allow
-            Action:
-            - s3:PutObject
-            - s3:DeleteObject
-            - s3:List*
-            Resource:
-            - !Sub arn:aws:s3:::${ArtifactsBucket}
-            - !Sub arn:aws:s3:::${ArtifactsBucket}/*
-            - !Sub arn:aws:s3:::${CacheBucket}
-            - !Sub arn:aws:s3:::${CacheBucket}/*
   SourceEventRole:
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-        - Action: 'sts:AssumeRole'
+        - Action: sts:AssumeRole
           Effect: Allow
           Principal:
             Service:
             - events.amazonaws.com
           Sid: 1
+      Path: /
       Policies:
       - PolicyDocument:
           Statement:
           - Action:
-            - 'codepipeline:StartPipelineExecution'
+            - codepipeline:StartPipelineExecution
             Effect: Allow
             Resource:
-            - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${EnvironmentName}
+            - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${EnvironmentName}-releasePipeline
         PolicyName: !Sub ${EnvironmentName}-CloudWatchEventPolicy
       RoleName: !Sub ${EnvironmentName}-CloudWatchEventRule
-    Type: "AWS::IAM::Role"
+    Type: AWS::IAM::Role
 
   # Static Code Analysis Lambda function
   CFNValidateLambda:
-    Type: 'AWS::Lambda::Function'
+    Type: AWS::Lambda::Function
     DependsOn:
     - LambdaCodePipelineExecutionPolicy
     - DBRules
@@ -619,7 +608,7 @@ Resources:
 
   # Service Status Lambda function for synthetic testing
   servicestatus:
-    Type: 'AWS::Lambda::Function'
+    Type: AWS::Lambda::Function
     DependsOn:
     - LambdaCodePipelineExecutionPolicy
     Properties:
@@ -642,12 +631,12 @@ Resources:
         Id: SSEAndSSLPolicy
         Statement:
         - Action:
-          - 's3:GetObject'
-          - 's3:GetObjectVersion'
-          - 's3:GetBucketVersioning'
+          - s3:GetObject
+          - s3:GetObjectVersion
+          - s3:GetBucketVersioning
           Condition:
             Bool:
-              'aws:SecureTransport': false
+              aws:SecureTransport: false
           Effect: Allow
           Principal:
             AWS:
@@ -659,7 +648,7 @@ Resources:
           - !Sub ${ArtifactsBucket.Arn}/*
           Sid: WhitelistedGet
         - Action:
-          - 's3:PutObject'
+          - s3:PutObject
           Effect: Allow
           Principal:
             AWS:
@@ -670,49 +659,27 @@ Resources:
           - !Sub ${ArtifactsBucket.Arn}/*
           Sid: WhitelistedPut
         Version: 2012-10-17
-    Type: 'AWS::S3::BucketPolicy'
+    Type: AWS::S3::BucketPolicy
   ArtifactsBucket:
-    Type: 'AWS::S3::Bucket'
-    DeletionPolicy: Delete
-  CacheBucket:
+    Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
       LifecycleConfiguration:
         Rules:
         - ExpirationInDays: 7
           Status: Enabled
-    Type: 'AWS::S3::Bucket'
-
-  # Custom resource to load and clean the buckets
-  s3ObjectLambda:
-    Type: 'AWS::Lambda::Function'
+  CacheBucket:
+    DeletionPolicy: Delete
     Properties:
-      Description: This Lambda function removes objects from an S3 bucket.
-      Code:
-        S3Bucket: !Ref codeBucket
-        S3Key: functions.zip
-      Handler: s3_object_remover.lambda_handler
-      Role: !GetAtt 'LambdaExecutionRole.Arn'
-      Runtime: python3.8
-      Timeout: 500
-
-  # Custom bucket maintenance functions.
-  artifactsBucketMaintenance:
-    Type: Custom::BucketMaintenance
-    Version: "1.0"
-    Properties:
-      ServiceToken: !GetAtt s3ObjectLambda.Arn
-      s3bucket: !Ref ArtifactsBucket
-  cacheBucketMaintenance:
-    Type: Custom::BucketMaintenance
-    Version: "1.0"
-    Properties:
-      ServiceToken: !GetAtt s3ObjectLambda.Arn
-      s3bucket: !Ref CacheBucket
+      LifecycleConfiguration:
+        Rules:
+        - ExpirationInDays: 3
+          Status: Enabled
+    Type: AWS::S3::Bucket
 
   # Dynamodb table for static code analysis rules
   DBRules:
-    Type: 'AWS::DynamoDB::Table'
+    Type: AWS::DynamoDB::Table
     Properties:
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
@@ -725,8 +692,8 @@ Resources:
   # CodeDeploy Application to install the application to ec2 instances
   CodeDeployApplication:
     Properties:
-      ApplicationName: !Ref 'AWS::StackName'
-    Type: "AWS::CodeDeploy::Application"
+      ApplicationName: !Ref AWS::StackName
+    Type: AWS::CodeDeploy::Application
 
   # Launch config for launching environment instances
   LaunchConfig:
@@ -772,16 +739,16 @@ Resources:
       Name: !Sub ${EnvironmentName}-SourceEvent
       State: ENABLED
       Targets:
-      - Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${EnvironmentName}
+      - Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${EnvironmentName}-releasePipeline
         Id: ProjectPipelineTarget
         RoleArn: !GetAtt SourceEventRole.Arn
-    Type: 'AWS::Events::Rule'
+    Type: AWS::Events::Rule
 
   # CodePipeline pipeline ;)
   ReleasePipeline:
-    Type: "AWS::CodePipeline::Pipeline"
+    Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: "releasePipeline"
+      Name: !Sub ${EnvironmentName}-releasePipeline
       ArtifactStore:
         Location: !Ref ArtifactsBucket
         Type: S3
@@ -793,7 +760,7 @@ Resources:
             Category: Source
             Owner: AWS
             Provider: CodeCommit
-            Version: '1'
+            Version: 1
           Configuration:
             BranchName: main
             PollForSourceChanges: false
@@ -809,7 +776,7 @@ Resources:
             Category: Invoke
             Owner: AWS
             Provider: Lambda
-            Version: '1'
+            Version: 1
           Configuration:
             FunctionName: !Ref CFNValidateLambda
             UserParameters: !Sub "{\"input\": \"${AWS::StackName}-SourceArtifact\", \n\"file\": \"cloudformation/application.json\",\n\"output\": \"${ArtifactsBucket}\"}\n"
@@ -818,7 +785,7 @@ Resources:
           OutputArtifacts:
           - Name: TemplateSource2
           Name: stack_validate
-          Region: !Ref 'AWS::Region'
+          Region: !Ref AWS::Region
           RunOrder: 1
       - Name: Build
         Actions:
@@ -826,7 +793,7 @@ Resources:
             Category: Build
             Owner: AWS
             Provider: CodeBuild
-            Version: '1'
+            Version: 1
           Configuration:
             ProjectName: !Ref AWS::StackName
           InputArtifacts:
@@ -841,15 +808,15 @@ Resources:
             Category: Deploy
             Owner: AWS
             Provider: CloudFormation
-            Version: '1'
+            Version: 1
           Configuration:
             ActionMode: CHANGE_SET_REPLACE
             Capabilities: CAPABILITY_IAM
             ChangeSetName: test-stack-changeset
-            ParameterOverrides: '{"Stage":"Test"}'
+            ParameterOverrides: '{"Stage": "Test"}'
             RoleArn: !GetAtt CloudFormationTrustRole.Arn
             StackName: !Sub ${AWS::StackName}-test-stack
-            TemplatePath: !Sub '${AWS::StackName}-BuildArtifact::cloudformation/application.json'
+            TemplatePath: !Sub ${AWS::StackName}-BuildArtifact::cloudformation/application.json
           InputArtifacts:
           - Name: !Sub ${AWS::StackName}-BuildArtifact
           Name: GenerateChangeSet
@@ -858,7 +825,7 @@ Resources:
             Category: Deploy
             Owner: AWS
             Provider: CloudFormation
-            Version: '1'
+            Version: 1
           Configuration:
             ActionMode: CHANGE_SET_EXECUTE
             ChangeSetName: test-stack-changeset
@@ -871,7 +838,7 @@ Resources:
             Category: Deploy
             Owner: AWS
             Provider: CodeDeploy
-            Version: '1'
+            Version: 1
           Configuration:
             ApplicationName: !Ref AWS::StackName
             DeploymentGroupName: !Sub ${AWS::StackName}-test-stack-DeploymentGroup
@@ -886,12 +853,12 @@ Resources:
             Category: Invoke
             Owner: AWS
             Provider: Lambda
-            Version: '1'
+            Version: 1
           Configuration:
             FunctionName: !Ref servicestatus
             UserParameters: '#{TestStackOutput.Url}'
           Name: Test_Status
-          Region: !Ref 'AWS::Region'
+          Region: !Ref AWS::Region
           RunOrder: 1
       - Name: Approval
         Actions:
@@ -899,28 +866,28 @@ Resources:
             Category: Approval
             Owner: AWS
             Provider: Manual
-            Version: '1'
+            Version: 1
           Configuration:
             CustomData: >-
-              Do you want to purge Test region resources and initiate Production deployment ?
+              Do you want to purge Test region resources and initiate Production deployment?
           InputArtifacts: []
           Name: Purge_Test
           OutputArtifacts: []
-          Region: !Ref 'AWS::Region'
+          Region: !Ref AWS::Region
           RunOrder: 1
         - ActionTypeId:
             Category: Deploy
             Owner: AWS
             Provider: CloudFormation
-            Version: '1'
+            Version: 1
           Configuration:
             ActionMode: DELETE_ONLY
             RoleArn: !GetAtt CloudFormationTrustRole.Arn
-            StackName: !Sub '${AWS::StackName}-test-stack'
+            StackName: !Sub ${AWS::StackName}-test-stack
           InputArtifacts: []
           Name: Delete_Test_Stack
           OutputArtifacts: []
-          Region: !Ref 'AWS::Region'
+          Region: !Ref AWS::Region
           RunOrder: 2
       - Name: Prod_Stack
         Actions:
@@ -928,15 +895,15 @@ Resources:
             Category: Deploy
             Owner: AWS
             Provider: CloudFormation
-            Version: '1'
+            Version: 1
           Configuration:
             ActionMode: CHANGE_SET_REPLACE
             Capabilities: CAPABILITY_IAM
             ChangeSetName: prod-stack-changeset
-            ParameterOverrides: '{"Stage":"Prod"}'
+            ParameterOverrides: '{"Stage": "Prod"}'
             RoleArn: !GetAtt CloudFormationTrustRole.Arn
             StackName: !Sub ${AWS::StackName}-prod-stack
-            TemplatePath: !Sub '${AWS::StackName}-BuildArtifact::cloudformation/application.json'
+            TemplatePath: !Sub ${AWS::StackName}-BuildArtifact::cloudformation/application.json
           InputArtifacts:
           - Name: !Sub ${AWS::StackName}-BuildArtifact
           Name: GenerateChangeSet
@@ -946,7 +913,7 @@ Resources:
             Category: Deploy
             Owner: AWS
             Provider: CloudFormation
-            Version: '1'
+            Version: 1
           Configuration:
             ActionMode: CHANGE_SET_EXECUTE
             ChangeSetName: prod-stack-changeset
@@ -959,7 +926,7 @@ Resources:
             Category: Deploy
             Owner: AWS
             Provider: CodeDeploy
-            Version: '1'
+            Version: 1
           Configuration:
             ApplicationName: !Ref AWS::StackName
             DeploymentGroupName: !Sub ${AWS::StackName}-prod-stack-DeploymentGroup
@@ -970,7 +937,7 @@ Resources:
           RunOrder: 3
 
 Outputs:
-  # Outputs that are used by the environment cloudformation template
+  # Outputs that are used by the application environment cloudformation template
   vpc:
     Value: !Ref VPC
     Export:
