@@ -44,7 +44,7 @@ Resources:
     Properties:
       HealthCheckType: ELB
       HealthCheckGracePeriod: 300
-      MinSize: 1
+      MinSize: 3
       MaxSize: 3
       DefaultInstanceWarmup: 30
       LaunchConfigurationName: !ImportValue
@@ -111,8 +111,8 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 30
-      UnhealthyThresholdCount: 2
-      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      HealthyThresholdCount: 3
       Port: 8080
       Protocol: HTTP
       VpcId: !ImportValue
