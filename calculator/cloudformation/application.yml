@@ -7,43 +7,52 @@ Parameters:
     Type: String
     MinLength: 1
     MaxLength: 255
-    AllowedPattern: '^[a-zA-Z][-a-zA-Z0-9]*$'
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
     Default: shared-resources
   Stage:
     Description: Release stage
     Type: String
     MinLength: 1
     MaxLength: 255
-    AllowedPattern: '^[a-zA-Z][-a-zA-Z0-9]*$'
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
     Default: Prod
+  CPUPolicyTargetValue:
+    Type: String
+    Description: The target utilization for the CPU metric
+    Default: 80
+  ALBRequestCountTargetValue:
+    Type: String
+    Description: The optimal average request count per instance during any one-minute interval
+    Default: 200
 Resources:
   DeploymentGroup:
-    Type: 'AWS::CodeDeploy::DeploymentGroup'
+    Type: AWS::CodeDeploy::DeploymentGroup
     Properties:
       DeploymentGroupName: !Join
       - '-'
-      - - !Ref 'AWS::StackName'
+      - - !Ref AWS::StackName
         - DeploymentGroup
       ApplicationName: !ImportValue
-        'Fn::Sub': '${SharedResourceStack}:CodeDeployApplication'
+        Fn::Sub: ${SharedResourceStack}:CodeDeployApplication
       ServiceRoleArn: !ImportValue
-        'Fn::Sub': '${SharedResourceStack}:CodeDeployRole'
+        Fn::Sub: ${SharedResourceStack}:CodeDeployRole
       DeploymentConfigName: CodeDeployDefault.AllAtOnce
       AutoScalingGroups:
       - !Ref AutoScalingGroup
   AutoScalingGroup:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       HealthCheckType: ELB
       HealthCheckGracePeriod: 300
       MinSize: 1
       MaxSize: 3
+      DefaultInstanceWarmup: 30
       LaunchConfigurationName: !ImportValue
-        'Fn::Sub': '${SharedResourceStack}:LaunchConfig'
+        Fn::Sub: ${SharedResourceStack}:LaunchConfig
       VPCZoneIdentifier: !Split
       - ','
       - !ImportValue
-        'Fn::Sub': '${SharedResourceStack}:PrivateSubnets'
+        Fn::Sub: ${SharedResourceStack}:PrivateSubnets
       TargetGroupARNs:
       - !Ref LoadBalancerTargetGroup
       Tags:
@@ -51,11 +60,35 @@ Resources:
         Value: !Join
         - '-'
         - - !ImportValue
-            'Fn::Sub': '${SharedResourceStack}:ApplicationName'
+            Fn::Sub: ${SharedResourceStack}:ApplicationName
           - !Ref Stage
         PropagateAtLaunch: true
+  CPUPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !!Ref AutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: !Ref CPUPolicyTargetValue
+  ALBRequestCountPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    DependsOn:
+    - !Ref LoadBalancerListener
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ALBRequestCountPerTarget
+          ResourceLabel: !Join
+          - '/'
+          - - !GetAtt LoadBalancer.LoadBalancerFullName
+          - - !GetAtt LoadBalancerTargetGroup.TargetGroupFullName
+        TargetValue: !Ref ALBRequestCountTargetValue
   LoadBalancerListener:
-    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
       - Type: forward
@@ -64,18 +97,18 @@ Resources:
       Port: 80
       Protocol: HTTP
   LoadBalancer:
-    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Scheme: internet-facing
       Subnets: !Split
       - ','
       - !ImportValue
-        'Fn::Sub': '${SharedResourceStack}:PublicSubnets'
+        Fn::Sub: ${SharedResourceStack}:PublicSubnets
       SecurityGroups:
       - !ImportValue
-        'Fn::Sub': '${SharedResourceStack}:PublicHttpIngressSecurityGroup'
+        Fn::Sub: ${SharedResourceStack}:PublicHttpIngressSecurityGroup
   LoadBalancerTargetGroup:
-    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 30
       UnhealthyThresholdCount: 2
@@ -83,11 +116,11 @@ Resources:
       Port: 8080
       Protocol: HTTP
       VpcId: !ImportValue
-        'Fn::Sub': '${SharedResourceStack}:VPC'
+        Fn::Sub: ${SharedResourceStack}:VPC
 Outputs:
   Url:
     Description: Calculator application URL
-    Value: !Sub 'http://${LoadBalancer.DNSName}'
+    Value: !Sub http://${LoadBalancer.DNSName}
   DeploymentGroup:
     Description: Calculator application deployment group
     Value: !Ref DeploymentGroup
