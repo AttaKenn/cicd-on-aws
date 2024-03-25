@@ -85,7 +85,7 @@ Resources:
           ResourceLabel: !Join
           - "/"
           - - !GetAtt LoadBalancer.LoadBalancerFullName
-          - - !GetAtt LoadBalancerTargetGroup.TargetGroupFullName
+            - !GetAtt LoadBalancerTargetGroup.TargetGroupFullName
         TargetValue: !Ref ALBRequestCountTargetValue
   LoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
