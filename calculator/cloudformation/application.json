@@ -67,7 +67,7 @@
                 "HealthCheckType": "ELB",
                 "HealthCheckGracePeriod": 300,
                 "MinSize": 3,
-                "MaxSize": 3,
+                "MaxSize": 5,
                 "DefaultInstanceWarmup": 30,
                 "LaunchConfigurationName": {
                     "Fn::ImportValue": {
