@@ -139,7 +139,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
       - Key: Name
-        Value: !Sub ${ApplicationName} Public Subnet 2
+        Value: !Sub ${EnvironmentName} Public Subnet 2
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
