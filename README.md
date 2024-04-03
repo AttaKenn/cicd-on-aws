@@ -78,3 +78,10 @@ This stage orchestrates the deployment of the application to production. It also
 3. AWS CodeDeploy: CICD-prod-stack-DeploymentGroup: The CodeDeploy agent, automatically installed on ASG instances (see **LaunchConfig** from the **Resources** section in [cicd.yaml](cicd.yaml) and **AutoScalingGroup** from the **Resources** section in [application.json](./calculator/cloudformation/application.json)), deploys the simple calculator web application to each instances within the ASG as part of Deployment Group.
 
 > Note: If prod-stack already exist, no changes will be made to the resources, the pipeline will quickly jump to the CodeDeploy stage which will deploy the new software update on the instances.
+
+Below is an image depicting the architecture of the Release Pipeline:
+
+<figure>
+    <img src="./MD images/CICD CodePipeline Pipeline.png" width="250">
+    <figcaption>CodePipeline Release Pipeline</figcaption>
+</figure>
