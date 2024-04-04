@@ -6,7 +6,7 @@ This project demonstrates a Continuous Integration and Continuous Delivery (CI/C
 
 > **Warning:** Trying this Project in your own AWS account will incur cost. If you are going to attempt this project in your own AWS account, make sure to delete all the stacks when you are done.
 The main stack deletion will fail because of non-empty S3 buckets, on the other hand other resources within the stack will be terminated/deleted. Just empty those S3 buckets (CacheBucket & ArtifactBucket) from the S3 console page and delete the stack again.
-Next, go to CloudWatch > Logstream Groups and delete the logstreams
+Next, go to CloudWatch > Logstream Groups and delete the logstreams. I've got you covered too if you can't try this project in your own AWS account, just keep reading ;)
 
 The project includes two CloudFormation templates:
 
@@ -82,7 +82,7 @@ This stage orchestrates the deployment of the application to production. It also
 Below is an image depicting the architecture of the Release Pipeline:
 
 <figure>
-    <img src="./MD images/CICD CodePipeline Pipeline.png" width="250">
+    <img src="./MD images/CICD CodePipeline Pipeline.png" width="250" alt="CodePipeline Release Pipeline">
     <figcaption>CodePipeline Release Pipeline</figcaption>
 </figure>
 
@@ -170,3 +170,43 @@ The image below shows the logs from the Service_Status Lambda Function from the 
 
 ![CICD Service Status CloudWatch Logs](./MD%20images/CICD%20service%20status%20cloudwatch%20logs%20-%20initial%20pipeline%20img-14.png)
 
+When the Test Stack status changes to ```CREATE_COMPLETE``` we can go to the **Outputs** tab to get the ELB Url in order to access our web application. See the image below.
+
+![CICD Test Stack 1 Outputs](./MD%20images/CICD%20test-stack%201%20complete%20-%20outputs%20with%20elb%20url%20%20img-15.png)
+
+The image below shows the calculator web application page.
+
+![Calculator Webpage - initial pipeline](./MD%20images/Test-stack%20ELB%20url%20-%20initial%20pipeline%20img-16.png)
+
+The image below shows our Test Stack Auto Scaling Group (ASG) instances from the EC2 console page hosting our calculator application.
+
+![CICD Test Stack 1 ASG instances](./MD%20images/Test-stack%20ASG%20instances%20-%20initial%20pipeline%20img%2017.png)
+
+The image below shows our Test Stack Auto Scaling Group and the Auto Scaling Policies from the management console.
+
+![Test Stack ASG & ASP](./MD%20images/Test-stack%20ASG%20console%20-%20policies%20shown%20-%20initial%20pipeline%20img-18.png)
+
+The image below displays the Amazon EventBridge Rule *CI-CD-SourceEvent* which starts the CodePipeline release pipeline execution whenever it is triggered by a change *(which is an event)* in the main branch of our CodeCommit Repo. Take note of the *Target Name* and the *Role* which the Rule will assume in order to start the target pipeline.
+
+![CICD SourceEvent with Target tab](./MD%20images/CICD%20SourceEvent%20with%20Target%20img-19.png)
+
+The image below shows our stack's VPC from the VPC console
+
+![CI-CD VPC](./MD%20images/CICD%20VPC%20console%20img-20.png)
+
+Returning to the CodePipeline console, at the Approval Stage and on clicking on the *Review*, there's going to be a pop-up which asking if we would like to Approve or Reject the build. ***See image below***.
+Take not of the Trigger (user/admin); as mentioned earlier, the pipeline starts during stack creation which I (the admin user) initiated.
+
+![CICD CodePipeline Approval Stage](./MD%20images/CICD%20Codepipeline%20approval%20-%20on%201st%20click%20-%20initial%20pipeline%20img-21.png)
+
+After approving, the pipeline moves to the Delete_Test_Stack stage which will have the Test Stack deleted (This will terminate every resource that was created from the Test Stack including the instances within the Test Stack ASG and the ELB) before moving to the **Prod_Stack** stage to create the Prod[uction] Stack. ***See the image below***.
+
+![CICD CodePipeline After Approval](./MD%20images/CICD%20Codepipeline%20-%20after%20approval%20-%20initial%20pipeline%20img-22.png)
+
+Now when we check the Test Stack ELB URL (Calculator App Webpage) there will be no response because the resources have been purged. ***See image below***.
+
+![Test Stack 1 ELB Url](./MD%20images/test-stack%20elb%20url%20after%20deletion%20-%20initial%20pipeline%20img-23.png)
+
+Moving back to the CloudFormation stacks console page, we will notice that the Test Stack (CICD-test-stack) is nowhere to be found (Delete Completed). The new discovery will be the Prod[uction] Stack (CICD-prod-stack) with the ```CREATE_IN_PROGRESS``` status. We have finally arrived the final stage[s] of our initial pipeline execution. ***See image below***
+
+![CICD Prod Stack from initial pipeline](./MD%20images/CICD%20prod-stack%201%20-%20initial%20pipeline%20img-24.png)
