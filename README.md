@@ -85,3 +85,88 @@ Below is an image depicting the architecture of the Release Pipeline:
     <img src="./MD images/CICD CodePipeline Pipeline.png" width="250">
     <figcaption>CodePipeline Release Pipeline</figcaption>
 </figure>
+
+## Deep Dive into the Project
+
+### CloudShell
+
+I started from my AWS CloudShell where I uploaded these files into my CloudShell instance:
+
+- [calculator.zip](./calculator.zip)
+
+- [functions.zip](./functions.zip)
+
+- [cicd.yaml](./cicd.yaml)
+
+> Note: To upload your files into your CloudShell instance, click on the "Actions" button at the top right corner of the CloudShell console and select upload file.
+
+#### Creating an S3 Bucket from the CloudShell
+
+I then created an S3 Bucket and copied the zip files into it, here are the commands:
+
+- ```aws s3 mb s3://attakenn-cicd-codebucket```
+
+- ```aws s3 sync . s3://attakenn-cicd-codebucket --exclude "cicd.yaml"```
+
+The last command will sync the current working directory with the S3 bucket by copying the zip files into the S3 bucket excluding the cicd.yaml file.
+
+#### Creating the CloudFormation Stack from the CloudShell
+
+```aws cloudformation create-stack --stack-name CICD --template-body file://cicd.yaml --parameters ParameterKey=codeBucket,ParameterValue=attakenn-cicd-codebucket --capabilities CAPABILITY_NAMED_IAM --disable-rollback --region us-west-2```
+
+The [cicd.yaml](./cicd.yaml) CloudFormation template requires an S3 bucket name as an input value for the codeBucket parameter.
+
+CAPABILITY_NAMED_IAM is added because CloudFormation will be creating some custom named IAM Resources such as IAM Roles.
+
+See the image below (check response from CloudFormation):
+
+![CloudShell](./MD%20images/CloudShell.png)
+
+The image below shows the CloudFormation console on creating the CICD stack.
+
+![CloudFormation console page - main stack creating](./MD%20images/CloudFormation%20console%20page%20-%20img-3.png)
+
+The image below shows the Artifacts and Cache buckets that have been created from the CloudFormation Template including the codebucket.
+
+![S3 Console](./MD%20images/S3%20buckets%20img-4.png)
+
+The image below is from the DynamoDB console displaying the DBRules table and the Rules items that has been inserted by the [CFNValidate](./functions/cfn_validate_lambda.py) Lambda Function.
+
+![DynamoDB Rules Table](./MD%20images/CICD%20Dynamo%20DB%20console%20img-12.png)
+
+The image below is from the CodeCommit Repository console page that was created as part of the stack.
+
+![CodeCommit Repo](./MD%20images/CICD%20CodeCommit%20Repo%20console%20page%20img-5.png)
+
+The image below shows from the console when the main stack's (CICD) creation is complete, you will also see the test stack (CICD-test-stack) in a ```CREATE_IN_PROGRESS```; this means everything is going on well with our Pipeline and it had reached that stage. We will get to the pipeline soon.
+
+![CloudFormation console - main and test stack](./MD%20images/CICD%20test-stack%201%20create%20in%20progress%20-%20cfn%20console%20img-6.png)
+
+Full console image here showing the COMPLETE SUCCESS message of some of the resources within the main stack.
+
+![CloudFormation console - main and test stack fullpage](./MD%20images/CICD%20test-stack%201%20create%20in%20progress%20-%20cfn%20console%20fullpage%20img-7.png)
+
+The image below shows the outputs from the main stack (CICD). The outputs will be exported to be used by other stacks such as the test and prod stacks (check the 'Export name' field)
+
+![CloudFormation console - CICD stack outputs](./MD%20images/CICD%20main%20stack%20outputs%20img-8.png)
+
+The image below shows the stack parameters (Keys and corresponding Values), notice the resolved value for the **LatestAmiId** parameter.
+
+![CICD Stack Parameters](./MD%20images/CICD%20main%20stack%20parameters%20img-9.png)
+
+The image below is from the stack's release pipeline console page, it displays the source and Static_Check stages.
+
+![CICD CodePipeline console - initial pipeline](./MD%20images/CICD%20CodePipeline%20console%20-%20initial%20pipeline%20img-10.png)
+
+The image below displays the Build and Test_Stack stages.
+
+![CICD CodePipeline console - Build and Test_Stack Stages](./MD%20images/CICD%20Codepipeline%20console%20-%20test-stack-stage%20-%20initial%20pipeline%20img-11.png)
+
+The image below displays the Service_Status stage and the *Pending* Approval stage of the pipeline.
+
+![CICD CodePipeline console - Service_Status and Approval Stages](./MD%20images/CICD%20Codepipeline%20console%20-%20passed%20service%20status%20-%20approval%20stage%20-%20initial%20pipeline%20img-13.png)
+
+The image below shows the logs from the Service_Status Lambda Function from the CloudWatch Logs. The logs displays that the test passed and the web application is running fine.
+
+![CICD Service Status CloudWatch Logs](./MD%20images/CICD%20service%20status%20cloudwatch%20logs%20-%20initial%20pipeline%20img-14.png)
+
