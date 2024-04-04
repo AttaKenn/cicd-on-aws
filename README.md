@@ -180,7 +180,7 @@ The image below shows the calculator web application page.
 
 The image below shows our Test Stack Auto Scaling Group (ASG) instances from the EC2 console page hosting our calculator application.
 
-![CICD Test Stack 1 ASG instances](./MD%20images/Test-stack%20ASG%20instances%20-%20initial%20pipeline%20img%2017.png)
+![CICD Test Stack 1 ASG instances](./MD%20images/Test-stack%20ASG%20instances%20-%20initial%20pipeline%20img-17.png)
 
 The image below shows our Test Stack Auto Scaling Group and the Auto Scaling Policies from the management console.
 
@@ -194,7 +194,7 @@ The image below shows our stack's VPC from the VPC console
 
 ![CI-CD VPC](./MD%20images/CICD%20VPC%20console%20img-20.png)
 
-Returning to the CodePipeline console, at the Approval Stage and on clicking on the *Review*, there's going to be a pop-up which asking if we would like to Approve or Reject the build. ***See image below***.
+Returning to the CodePipeline console, at the Approval Stage and on clicking on the *Review*, there's going to be a pop-up asking if we would like to Approve or Reject the build. ***See image below***.
 Take not of the Trigger (user/admin); as mentioned earlier, the pipeline starts during stack creation which I (the admin user) initiated.
 
 ![CICD CodePipeline Approval Stage](./MD%20images/CICD%20Codepipeline%20approval%20-%20on%201st%20click%20-%20initial%20pipeline%20img-21.png)
@@ -210,3 +210,19 @@ Now when we check the Test Stack ELB URL (Calculator App Webpage) there will be 
 Moving back to the CloudFormation stacks console page, we will notice that the Test Stack (CICD-test-stack) is nowhere to be found (Delete Completed). The new discovery will be the Prod[uction] Stack (CICD-prod-stack) with the ```CREATE_IN_PROGRESS``` status. We have finally arrived the final stage[s] of our initial pipeline execution. ***See image below***
 
 ![CICD Prod Stack from initial pipeline](./MD%20images/CICD%20prod-stack%201%20-%20initial%20pipeline%20img-24.png)
+
+After CloudFormation completes the creation of the CICD-prod-stack, we can then get the Url of our Load Balancer in order to visit our application's page running in the production environment. ***See image below***.
+
+![CICD Prod Stack Outputs from initial pipeline](./MD%20images/CICD%20prod-stack%201%20outputs%20-%20initial%20pipeline%20img-25.png)
+
+On visiting the page, the Load Balancer returns a *"502 Bad Gateway"* response. This happened because whiles CloudFormation is done creating the stack, AWS CodeDeploy is yet to Deploy the application to the ASG EC2 instances. The pipeline is yet to be complete. ***See image below***.
+
+![CICD Prod Stack ELB Url before CodeDeploy Actions complete](./MD%20images/CICD%20prod-stack%201%20elb%20url%20before%20codedeploy%20deployment%20img-26.png)
+
+Going back to the CodePipeline console, we can notice that the pipeline execution has completed; CodeDeploy application deployment succeeded. ***See image below***.
+
+![CICD Prod_Stack Stage completion from initial pipeline execution](./MD%20images/CICD%20prod-stack%201%20-%20initial%20pipeline%20complete%20-%20from%20CPP%20console%20img-27.png)
+
+Now returning back to the webpage and refreshing, we see our website live and running. ***See image below***.
+
+![CICD Prod Stack ELB Url from initial pipeline](./MD%20images/CICD%20prod-stack%201%20-%20elb%20url%20img-28.png)
