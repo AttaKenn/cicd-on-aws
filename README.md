@@ -63,8 +63,6 @@ If the reviewer approves the changes, the pipeline proceeds to:
 
 - **Purge Test Stack:** CloudFormation deletes the temporary test stack (-test-stack) created during the testing phase.
 
-- **Create Production Stack:** A new CloudFormation stack having "prod-stack" in its name is created, containing the production infrastructure for the calculator application. If the prod-stack already exist, CodeDeploy will deploy the new software update unto the running instances.
-
 If the reviewer rejects the changes, the pipeline fails, preventing unintended deployments.
 
 #### Prod_Stack_Stage (Production Deployment Stage)
@@ -294,3 +292,24 @@ Going back to the release pipeline from the CodePipeline console page, at the Ap
 Clicking on the **Revisions** tab will provide some details on the Revision along with links to the CodeCommit Repo showcasing where the changes happened within the code. The image below shows the code change in the CodeCommit Repo.
 
 ![Revision check - First Trigger](./MD%20images/Revision%20check%20for%20code%20push%20from%20approval%20stage%20-%201st%20trigger%20img-39.png)
+
+After Approving the new Build (code push), the pipeline moves to the Delete_Test_Stack stage prompting CloudFormation to purge (delete) the **CICD-Test-Stack** before moving on to the Prod_Stack stage. ***See image below***.
+
+![Purging Test Stack 2 after Approval](./MD%20images/CICD%20on%20approving%20test-stack%20for%201st%20target%20pipe%20is%20purged%20img-40.png)
+
+The image below from EC2 Console shows the Test Stack ASG instances in the *shutting down* state, preparing to be terminated.
+
+![Test Stack 2 ASG instances Shutting Down](./MD%20images/test-stack%202%20ASG%20instances%20starts%20shutting%20down%20after%201st%20trigger%20approval%20img-41.png)
+
+Once the Pipeline execution is complete, we can visit the production webpage, refresh the browser to see the newly updated application. ***See image below*** and compare with [CICD Prod Stack ELB Url from initial pipeline](./MD%20images/CICD%20prod-stack%201%20-%20elb%20url%20img-28.png). 
+
+> Note: There has been no change with the production infrastructure. Only the application was updated. Production URL remains the same.
+
+![CICD Prod Stack ELB URL after version 2 update](./MD%20images/CICD%20prod-stack%201%20-%20elb%20url%20after%20page%20update%20to%20version%202%20img-42.png)
+
+### Next Step: Introducing code error to cause Pipeline Execution Failure
+
+To introduce an error, I changed the value of the variable PORT in the [service.js](./calculator/service.js) from 8080 to 80, and pushed the committed code to the remote repository. ***See image below***.
+
+![Error code in service.js](./MD%20images/service-js%20broken%20code%20-%20changed%20port%20number%20from%208080%20to%2080%20img-43.png)
+
