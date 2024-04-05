@@ -6,7 +6,7 @@ This project demonstrates a Continuous Integration and Continuous Delivery (CI/C
 
 > **Warning:** Trying this Project in your own AWS account will incur cost. If you are going to attempt this project in your own AWS account, make sure to delete all the stacks when you are done.
 The main stack deletion will fail because of non-empty S3 buckets, on the other hand other resources within the stack will be terminated/deleted. Just empty those S3 buckets (CacheBucket & ArtifactBucket) from the S3 console page and delete the stack again.
-Next, go to CloudWatch > Logstream Groups and delete the logstreams. I've got you covered too if you can't try this project in your own AWS account, just keep reading ;)
+Next, go to CloudWatch > Logs > Log Groups and delete the Log groups. I've got you covered too if you can't try this project in your own AWS account, just keep reading ;)
 
 The project includes two CloudFormation templates:
 
@@ -211,6 +211,10 @@ Moving back to the CloudFormation stacks console page, we will notice that the T
 
 ![CICD Prod Stack from initial pipeline](./MD%20images/CICD%20prod-stack%201%20-%20initial%20pipeline%20img-24.png)
 
+The image below shows the terminated instances from the Test Stack ASG and the newly launched Prod Stack ASG instances in a running state from the EC2 console page.
+
+![CICD EC2 console page - terminated Test Stack 1 instance](./MD%20images/CICD%20EC2%20console%20page%20-%20terminated%20test%20instance%20-%20running%20prod%20instances%20-%20initial%20pipeline%20img-32.png)
+
 After CloudFormation completes the creation of the CICD-prod-stack, we can then get the Url of our Load Balancer in order to visit our application's page running in the production environment. ***See image below***.
 
 ![CICD Prod Stack Outputs from initial pipeline](./MD%20images/CICD%20prod-stack%201%20outputs%20-%20initial%20pipeline%20img-25.png)
@@ -223,6 +227,70 @@ Going back to the CodePipeline console, we can notice that the pipeline executio
 
 ![CICD Prod_Stack Stage completion from initial pipeline execution](./MD%20images/CICD%20prod-stack%201%20-%20initial%20pipeline%20complete%20-%20from%20CPP%20console%20img-27.png)
 
-Now returning back to the webpage and refreshing, we see our website live and running. ***See image below***.
+Now returning back to the webpage and refreshing, we see our website live and running in our production environment (stack). ***See image below***.
 
 ![CICD Prod Stack ELB Url from initial pipeline](./MD%20images/CICD%20prod-stack%201%20-%20elb%20url%20img-28.png)
+
+### Next Step: Updating the Remote CodeCommit Repository
+
+Next I will be pushing some code changes to our remote CodeCommit Repository from my local machine to trigger a new pipeline execution. Follow the steps below to connect your local repository to your remote CodeCommit repository:
+
+1. In your AWS Account go to IAM.
+
+2. Go to **Users** and select the IAM User for which you would like to generate an AWS CodeCommit credentials.
+
+3. At the selected IAM User page, look for the **Security credentials**  tab and click on it.
+
+4. Scroll down to **HTTPS Git Credentials for AWS CodeCommit** and click on **Generate credentials**.
+
+5. Download the credentials file and keep it in a secure location.
+
+You can then clone the repository by using the provided Url from the CodeCommit console page.
+
+```git remote add origin [URL]```
+
+```git remote -v```
+
+```git clone [URL]```
+
+Use the downloaded credentials to authenticate when you try to connect to the remote CodeCommit Repository.
+
+ ***See the image below.***
+
+![CICD Local Git Repo](./MD%20images/CICD%20Local%20Git%20Repo%20-%20initial%20pipeline%20img-29.png)
+
+Next, we make some changes to the index.html file. We simply add "Version 2" to the h1 tag making it **"Simple Calculator Service Version 2"**. ***See image below***.
+
+![Index.html first change](./MD%20images/index.html%20first%20change%20-%20version%202%20img-30.png)
+
+Next, the new code change is committed and pushed to the remote CodeCommit Repo to start a new pipeline execution. ***See the 2 images below***.
+
+![CICD CodePipeline Console - First trigger](./MD%20images/CICD%20Codepipeline%20console%20-%201st%20trigger%20img-31.png)
+
+![CICD CodePipeline Console - Static Check in progress - First trigger](./MD%20images/CICD%20Codepipeline%20console%20-%20static-check%20in%20progress%20-%201st%20trigger%20img-33.png)
+
+As the pipeline continues through to the Test_Stack stage and going back to the CloudFormation console page, we will see a new test stack (CICD-test-stack) in a ```REVIEW_IN_PROGRESS``` state. ***See image below***.
+
+![CICD New Test Stack (2) from 1st Pipeline trigger](./MD%20images/CICD%20prod-stack%20from%20init%20pipe%20online%20with%20new%20test-stack%20for%201st%20pipeline%20trigger%20creating%20img-34.png)
+
+After the new test stack achieves a ```CREATE_COMPLETE``` status, we then go to the **Outputs** tab to get the Url provided by our load balancer in order to visit the newly updated webpage. ***See image below***.
+
+![CICD Test Stack 2 Outputs from 1st Pipeline trigger](./MD%20images/CICD%20test-stack%202%20completed%20with%20outputs%20inclu.%20elb%20url%20img-35.png)
+
+The image below shows the newly updated page on our Test Stack ASG instances. I have highlighted the "Version 2" from the webpage.
+
+![CICD Test Stack 2 ELB URL to Webpage](./MD%20images/CICD%20test-stack%202%20elb%20url%20with%20updated%20page%20-%20version%202%20img-36.png)
+
+Going back to the EC2 Console page, we can see 6 instances running, 3 from the new Test Stack and 3 from the Prod Stack which was created in the initial pipeline execution. In addition to the 6 running instances, we have the 3 terminated instances from the First Test Stack which was created in the initial pipeline. ***See image below, as always ;)***
+
+> Note that instances from the Test Stack have the name *simple-calculator-***Test**** and instances from the Prod Stack have the name *simple-calculator-***Prod****.
+
+![CICD EC2 console page with 6 running instances](./MD%20images/CICD%20EC2%20console%20page%20-%206%20running%20instances%20img-37.png)
+
+Going back to the release pipeline from the CodePipeline console page, at the Approval stage we click on *Review*. From the **Details** section, under the Trigger we can see that ***CloudWatchEvent - rule/CI-CD-SourceEvent*** triggered the pipeline execution. Compare with [CICD CodePipeline Approval Stage](./MD%20images/CICD%20Codepipeline%20approval%20-%20on%201st%20click%20-%20initial%20pipeline%20img-21.png) and ***See image below***.
+
+![CICD CodePipeline - Approval for Version 2](./MD%20images/CICD%20Codepipeline%20%20-%20approval%20-%20approving%20for%20version%202%20img-38.png)
+
+Clicking on the **Revisions** tab will provide some details on the Revision along with links to the CodeCommit Repo showcasing where the changes happened within the code. The image below shows the code change in the CodeCommit Repo.
+
+![Revision check - First Trigger](./MD%20images/Revision%20check%20for%20code%20push%20from%20approval%20stage%20-%201st%20trigger%20img-39.png)
