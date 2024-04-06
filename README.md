@@ -193,7 +193,7 @@ The image below shows our stack's VPC from the VPC console
 ![CI-CD VPC](./MD%20images/CICD%20VPC%20console%20img-20.png)
 
 Returning to the CodePipeline console, at the Approval Stage and on clicking on the *Review*, there's going to be a pop-up asking if we would like to Approve or Reject the build. ***See image below***.
-Take not of the Trigger (user/admin); as mentioned earlier, the pipeline starts during stack creation which I (the admin user) initiated.
+Take note of the Trigger (user/admin); as mentioned earlier, the pipeline starts during stack creation which I (the admin user) initiated.
 
 ![CICD CodePipeline Approval Stage](./MD%20images/CICD%20Codepipeline%20approval%20-%20on%201st%20click%20-%20initial%20pipeline%20img-21.png)
 
@@ -313,3 +313,36 @@ To introduce an error, I changed the value of the variable PORT in the [service.
 
 ![Error code in service.js](./MD%20images/service-js%20broken%20code%20-%20changed%20port%20number%20from%208080%20to%2080%20img-43.png)
 
+The new Pipeline execution runs through to the Test_Stack stage where it fails at the Deploy sub-stage handled by AWS CodeDeploy. ***See image below***.
+
+> Note: Changeset for the Test Stack was executed, successfully creating resources like the ASG instances and the ELB. You can optionally delete the test stack since the CodeDeploy deployment failed before you trigger the pipeline to start again. When you delete the CICD-test-stack, the pipeline will re-create it when it starts again. You can also leave it there, on starting the pipeline again, when it reaches the Test_Stack stage, it will quickly jump to the Deploy sub-stage. In this instance, I chose to delete the CICD-test-stack after the failed deployment.
+
+![CICD CodePipeline Console - Failed Application Deployment](./MD%20images/CICD%20Codepipeline%20console%20test-stack-codedeploy%20failed%20stage%20img-44.png)
+
+Clicking on the **View details** will display the *Action execution details*. ***See image below***.
+
+![CICD CodePipeline Console - CodeDeploy details](./MD%20images/CICD%20Codepipeline%20console%20test-stack-codeploy%20failed%20stage%20exe%20details%20img-45.png)
+
+Under the *Execution details* in the pop-up, there is a *View in CodeDeploy* link, clicking on it will send us to CodeDeploy's console page where we can learn more about the error/failure. ***See image below***.
+
+![CICD CodeDeploy Concole](./MD%20images/CICD%20CodeDeploy%20applications%20console%20-%20deployments%20groups%20tab%20img-46.png)
+
+Next we click on the *CICD-test-stack-DeploymentGroup* for more details about the deployment events. From the page, we can see that the Lifecycle event hook (ValidateService) failed. Check [appspec.yml](./calculator/appspec.yml) & [validate.sh](./calculator/deploy_scripts/validate.sh). ***See image below***.
+
+![CICD CodeDeploy Deployment Events](./MD%20images/CICD%20CodeDeploy%20deployment%20events%20-%20script%20failed%20img-47.png)
+
+Let's click on the *ScriptFailed* link in the *Error code* column to view the Event Logs. ***See image below***.
+
+![CICD CodeDeploy Failed Event Logs](./MD%20images/CICD%20CodeDeploy%20deployment%20events%20-%20script%20failed%20-%20detail%20page%20with%20logs%20img-48.png)
+
+We can see from the image above that there is no running application server listening on port 8080 on the EC2 instance due to the error in the [service.js](./calculator/service.js).
+
+Remember also that our Application Load Balancer is configured to forward traffic to our backend service (ASG instances) on port 8080. ***See the following 2 images below***.
+
+![CICD-test-stack 3 Outputs from CloudFormation Console](./MD%20images/CICD%20test-stack%203%20outputs%202nd%20pipeline%20trigger%20img-49.png)
+
+![CICD-test-stack 3 URL](./MD%20images/CICD%20elb%20url%20for%20test-stack%203%20when%20codedeploy%20deployment%20failed%20img-50.png)
+
+Next, the CICD-test-stack is manually deleted from the CloudFormation console, the value of the PORT variable in the [service.js](./calculator/service.js) is corrected (changed back to 8080 from 80), and the [index.html](./calculator/public/index.html) is updated to "...Version 3". ***See image below***.
+
+![index.html second change - version 3](./MD%20images/index.html%20second%20change%20-%20version%203%20-%20port%20number%20corrected%20img-51.png)
