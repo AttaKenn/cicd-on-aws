@@ -377,6 +377,10 @@ The image below shows the updated webpage in the prod stack. The pipeline execut
 
 ![CICD Prod Stack calculator application webpage](./MD%20images/CICD%20prod-stack%201%20-%20elb%20url%20after%20page%20update%20to%20version%203%20img-58.png)
 
+The image below shows the Execution history of the CI-CD-releasePipeline.
+
+![CICD CodePipeline detailed Exectution history](./MD%20images/CICD%20Codepipeline%20-%20after%203rd%20trigger%20-%20execution%20history%20-%20console%20page%20img-65.png)
+
 ### Next: Terminating the Prod Stack EC2 instances
 
 Everything is working perfectly now, Let's see what happens if the Prod[uction] Stack ASG EC2 instances are terminated from the EC2 console. ***See image below***.
@@ -388,3 +392,27 @@ The image below shows the response after terminating all the instances hosting t
 > Note: This response is from the Application ELB. It forwards the traffic to the ASG, and now there are no instances in the ASG to handle the requests.
 
 ![Page Response after terminating Prod Stack ASG instances](./MD%20images/CICD%20prod-stack%201%20-%20elb%20url%20after%20terminating%20prod-stack%20instances%20img-60.png)
+
+> Note that after deleting the ASG instances, CloudFormation does not detect any drift in the CICD-prod-stack. The instances are managed by the Auto Scaling Group and not CloudFormation; they are not defined in the **Resources** section in the CloudFormation template. ***See image below***
+
+![CICD-prod-stack drift results](./MD%20images/CICD%20prod-stack%201%20-%20stack%20drift%20results%20after%20instance%20deletion%20img-61.png)
+
+After about a minute or 2, the Auto Scaling kicks in launching a new instance. ***See image below***
+
+![EC2 console page - newly launched EC2 vm instance](./MD%20images/CICD%20EC2%20console%20page%20-%201%20new%20instance%20running%20after%203%20instances%20termination%20img-62.png)
+
+Now unlike the previously terminated Prod Stack instances, the newly launched instance by the Auto Scaling Group does not have the calculator application installed and running. So one might ask, how do we get the application installed and started on the newly launched instance? Are we to trigger the pipeline again? The simple answer is there's no need for all that. In the **Resources** section of the [application.json](./calculator/cloudformation/application.json) CloudFormation template there is a CodeDeploy DeploymentGroup and the ASG is attached to it. On launching a new instance, the ASG will automatically initiate a CodeDeploy deployment event. ***See image below*** and take note of the ***Initiating event*** field.
+
+![CICD CodeDeploy deployment history](./MD%20images/CICD%20CodeDeploy%20deployment%20history%20after%201st%20ASG%20action%20img-63.png)
+
+On returning to the production page and refreshing the browser, we have the application running; backed by a single ASG instance for now. ***See image below***.
+
+![Page response after ASG first action](./MD%20images/CICD%20prod-stack%201%20-%20elb%20url%20after%20ASG%201st%20action%20-%201st%20running%20instance%20respong%20to%20elb%20traffic%20img-64.png)
+
+SInce the ASG was configured to have a minimum instance number of 3, by default, after the first instance was launched, a new instance is launched in a 2 minute interval until minimum instance number (3) is achieved. ***See image below***.
+
+![EC2 Console with 3 new running instances](./MD%20images/CICD%20EC2%20console%20page%20-%203%20new%20instance%20running%20after%20prev%20instances%20termination%20img-66.png)
+
+The image below shows the CodeDeploy deployment history after the 3 ASG actions.
+
+![CICD CodeDeploy deployment history after 3rd ASG action](./MD%20images/CICD%20CodeDeploy%20deployment%20history%20after%203rd%20ASG%20action%20img-67.png)
