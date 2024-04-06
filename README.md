@@ -84,7 +84,7 @@ Below is an image depicting the architecture of the Release Pipeline:
     <figcaption>CodePipeline Release Pipeline</figcaption>
 </figure>
 
-## Deep Dive into the Project
+## Diving into the Project
 
 ### CloudShell
 
@@ -307,7 +307,7 @@ Once the Pipeline execution is complete, we can visit the production webpage, re
 
 ![CICD Prod Stack ELB URL after version 2 update](./MD%20images/CICD%20prod-stack%201%20-%20elb%20url%20after%20page%20update%20to%20version%202%20img-42.png)
 
-### Next Step: Introducing code error to cause Pipeline Execution Failure
+### Introducing code error to cause Pipeline Execution Failure
 
 To introduce an error, I changed the value of the variable PORT in the [service.js](./calculator/service.js) from 8080 to 80, and pushed the committed code to the remote repository. ***See image below***.
 
@@ -381,7 +381,7 @@ The image below shows the Execution history of the CI-CD-releasePipeline.
 
 ![CICD CodePipeline detailed Exectution history](./MD%20images/CICD%20Codepipeline%20-%20after%203rd%20trigger%20-%20execution%20history%20-%20console%20page%20img-65.png)
 
-### Next: Terminating the Prod Stack EC2 instances
+### Terminating the Prod Stack EC2 instances
 
 Everything is working perfectly now, Let's see what happens if the Prod[uction] Stack ASG EC2 instances are terminated from the EC2 console. ***See image below***.
 
@@ -416,3 +416,35 @@ SInce the ASG was configured to have a minimum instance number of 3, by default,
 The image below shows the CodeDeploy deployment history after the 3 ASG actions.
 
 ![CICD CodeDeploy deployment history after 3rd ASG action](./MD%20images/CICD%20CodeDeploy%20deployment%20history%20after%203rd%20ASG%20action%20img-67.png)
+
+### Deleting Auto Scaling Group
+
+Let's see what happens when the ASG is deleted. ***See image below***.
+
+![CICD-prod-stack ASG deletion](./MD%20images/CICD%20ASG%20Deletion%20for%20stack%20drift%20img-68.png)
+
+The image below shows the ELB response from the calculator page after deleting the ASG.
+
+![Page response after ASG deletion](./MD%20images/CICD%20prod-stack%201%20-%20elb%20url%20after%20ASG%20deletion%20img-69.png)
+
+>Note: Although the instances in the Auto Scaling Group remain in a running state, with the application also running in them, the application cannot serve any requests from the ELB because it is the ASG itself that has been configured as the ELB backend target group, not the individual ASG EC2 instances.
+
+The image below shows the Auto Scaling Group in **Deleting** state whiles the number of running instances remains 3.
+
+![CICD-prod-stack ASG console page with deleting status](./MD%20images/CICD%20ASG%20console%20page%20-%20deleting%20status%20with%203%20instances%20running%20img-70.png)
+
+The image below shows from the EC2 console the number of running instances.
+
+![EC2 console page](./MD%20images/CICD%20EC2%20console%20page%20-%203%20instances%20still%20running%20after%20ASG%20deletion%20img-71.png)
+
+The image below shows the drift results of the CICD-prod-stack from the CloudFormation console page. From the image we can see the drift status of ***AutoScalingGroup*** is ```DELETED```.
+
+![CICD-prod-stack CFN console drift results](./MD%20images/CICD%20prod-stack%201%20CFN%20console%20-%20drift%20results%20page%20-%20showing%20drift%20results%20from%20ASG%20deletion%20img-72.png)
+
+The image below shows the Log groups created by the Lambda Functions and AWS CodeBuild which provide details about the operations of these services.
+
+![CICD CloudWatch Log Groups](./MD%20images/CICD%20CloudWatch%20Log%20Groups%20created%20by%20CodeBuild%20and%20the%20Lambda%20Functions%20img-73.png)
+
+### Please do not forget to delete the stack(s) upon completion
+
+![Deleting main stack - CICD](./MD%20images/Delete%20CICD%20stack%20%20img-74.png)
