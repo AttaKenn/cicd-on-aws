@@ -346,3 +346,45 @@ Remember also that our Application Load Balancer is configured to forward traffi
 Next, the CICD-test-stack is manually deleted from the CloudFormation console, the value of the PORT variable in the [service.js](./calculator/service.js) is corrected (changed back to 8080 from 80), and the [index.html](./calculator/public/index.html) is updated to "...Version 3". ***See image below***.
 
 ![index.html second change - version 3](./MD%20images/index.html%20second%20change%20-%20version%203%20-%20port%20number%20corrected%20img-51.png)
+
+The change is committed and then pushed to the remote CodeCommit repository to start a new pipeline execution. ***See the image below*** which shows the CICD release pipeline's executions including the just started one with the ***"In progress"*** status. Check the Triggers.
+
+![CICD CodePipeline history](./MD%20images/CICD%20Codepipeline%20-%203rd%20trigger%20-%20mini%20history%20img-52.png)
+
+The image below shows the from the console the build history for the CICD CodeBuild Project.
+
+![CICD CodeBuild History from console](./MD%20images/CICD%20CodeBuild%20build%20history%20after%203rd%20trigger%20-%20codebuild%20console%20img-53.png)
+
+The image below shows the updated calculator application webpage from the test stack, soon to be deployed to the prod stack in the pipeline.
+
+![CICD Test Stack 4 ELB URL](./MD%20images/CICD%20test-stack%204%20elb%20url%20after%203rd%20trigger%20-%20ver%203%20img-54.png)
+
+The image below shows the commit history of the AWS CodeCommit repository.
+
+![Repository commit history](./MD%20images/CICD%20CodeCommit%20Repo%20commit%20history%20-%20console%20-%20after%203rd%20trigger%20img-55.png)
+
+The image below shows Prod_Stack stage from the CodePipeline console after approving the push update (build). CodeDeploy prepares to deploy the update into the CICD-prod-stack ASG intances.
+
+![CICD CodePipeline Prod_Stage in progress](./MD%20images/CICD%20codepipeline%20prod-stack%20stage%20after%203rd%20trigger%20and%20approval%20img-56.png)
+
+The image below shows the CodeDeploy deployment history. Take note of the **Initiating event** field where all are *User actions*.
+
+> Note: Under the deployment group field/column, there are no test-stack related deployments because all CICD-test-stack-DeploymentGroups resources are deleted on deleting the CICD-test-stack stacks.
+
+![CICD CodeDeploy deployment history](./MD%20images/CICD%20CodeDeploy%20deployment%20history%20after%203rd%20trigger%20and%20approval%20img-57.png)
+
+The image below shows the updated webpage in the prod stack. The pipeline execution has completed.
+
+![CICD Prod Stack calculator application webpage](./MD%20images/CICD%20prod-stack%201%20-%20elb%20url%20after%20page%20update%20to%20version%203%20img-58.png)
+
+### Next: Terminating the Prod Stack EC2 instances
+
+Everything is working perfectly now, Let's see what happens if the Prod[uction] Stack ASG EC2 instances are terminated from the EC2 console. ***See image below***.
+
+![Terminating Prod Stack ASG instances](./MD%20images/CICD%20EC2%20console%20page%20-%20terminate%20prod-stack%20instances%20img-59.png)
+
+The image below shows the response after terminating all the instances hosting the calculator application.
+
+> Note: This response is from the Application ELB. It forwards the traffic to the ASG, and now there are no instances in the ASG to handle the requests.
+
+![Page Response after terminating Prod Stack ASG instances](./MD%20images/CICD%20prod-stack%201%20-%20elb%20url%20after%20terminating%20prod-stack%20instances%20img-60.png)
